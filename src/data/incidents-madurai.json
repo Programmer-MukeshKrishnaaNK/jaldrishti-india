@@ -1,0 +1,292 @@
+{
+  "generated": "2026-11-02",
+  "note": "Waterlogging reports transcribed from the cited articles. Place names are as written in each article. Coordinates are added by scripts/build-incidents.mjs from OpenStreetMap and are approximate locality centres, not the exact spots reported. Localities are mapped only when OpenStreetMap has a matching place (suburb, neighbourhood and similar); named facilities are mapped to that facility.",
+  "geocoding": "OpenStreetMap Nominatim, restricted to the Madurai area. © OpenStreetMap contributors, ODbL.",
+  "reports": [
+    {
+      "id": "dtnext-2026-10-23",
+      "eventDate": "2026-10-22",
+      "eventDateNote": "The article (23 Oct 2026) describes rain from \"Thursday evening\", which was 22 Oct 2026.",
+      "publisher": "DT Next (citing Daily Thanthi)",
+      "publishedOn": "2026-10-23",
+      "url": "https://www.dtnext.in/news/tamilnadu/heavy-rain-leaves-madurai-under-water-hundreds-of-homes-flooded-rs-23-crore-drainage-projects-planned",
+      "kind": "news",
+      "summary": "Four to five hours of heavy rain left several low-lying areas under knee-deep water; floodwater entered hundreds of houses in Sellur, and the Corporation pumped out water.",
+      "places": [
+        {
+          "name": "Sellur",
+          "kind": "locality"
+        },
+        {
+          "name": "Mattuthavani",
+          "kind": "locality"
+        },
+        {
+          "name": "Koripalayam",
+          "kind": "locality"
+        },
+        {
+          "name": "Anna Nagar",
+          "kind": "locality"
+        },
+        {
+          "name": "Periyar Bus Stand",
+          "kind": "facility"
+        }
+      ]
+    },
+    {
+      "id": "dtnext-2026-10-23-recurring",
+      "eventDate": null,
+      "eventDateNote": "Described as recurring rather than a single event.",
+      "publisher": "DT Next (reporting Madurai Corporation plans)",
+      "publishedOn": "2026-10-23",
+      "url": "https://www.dtnext.in/news/tamilnadu/heavy-rain-leaves-madurai-under-water-hundreds-of-homes-flooded-rs-23-crore-drainage-projects-planned",
+      "kind": "news",
+      "summary": "The Corporation announced drainage projects worth about Rs 23 crore to address recurring waterlogging at these places.",
+      "places": [
+        {
+          "name": "Madurai Railway Station",
+          "kind": "facility"
+        },
+        {
+          "name": "Masi streets",
+          "kind": "area",
+          "reason": "The article refers to the Masi streets, four streets around the temple, so no single point is given."
+        }
+      ]
+    },
+    {
+      "id": "pti-2024-10-26",
+      "eventDate": "2024-10-25",
+      "eventDateNote": "The report gives 10 cm of rain on Friday 25 Oct 2024, including 4.5 cm between 3:00 and 3:15 pm according to the India Meteorological Department.",
+      "publisher": "PTI via Deccan Herald",
+      "publishedOn": "2024-10-26",
+      "url": "https://www.deccanherald.com/india/tamil-nadu/heavy-downpour-in-15-minutes-brings-tamil-nadus-madurai-under-swathes-of-water-3250135",
+      "kind": "news",
+      "summary": "Intense rain caused waterlogging in several low-lying areas and water entered homes; the Commissioner reported inundation complaints from 12 locations in Zone 1 and 6 in Zone 2.",
+      "places": [
+        {
+          "name": "Sellur",
+          "kind": "locality"
+        },
+        {
+          "name": "Athikulam",
+          "kind": "locality"
+        },
+        {
+          "name": "BB Kulam",
+          "kind": "locality"
+        },
+        {
+          "name": "Mullai Nagar",
+          "kind": "locality"
+        },
+        {
+          "name": "Kadachanenthal",
+          "kind": "locality"
+        },
+        {
+          "name": "LBT Nagar",
+          "kind": "locality"
+        },
+        {
+          "name": "Tamukkam",
+          "kind": "locality"
+        },
+        {
+          "name": "Thallakulam",
+          "kind": "locality"
+        },
+        {
+          "name": "Azhagar Koil Salai",
+          "kind": "locality"
+        },
+        {
+          "name": "Goripalayam",
+          "kind": "locality"
+        },
+        {
+          "name": "Simmakkal",
+          "kind": "locality"
+        },
+        {
+          "name": "Nelpettai",
+          "kind": "locality"
+        },
+        {
+          "name": "Keelavasal",
+          "kind": "locality"
+        },
+        {
+          "name": "Yanaikkal",
+          "kind": "locality"
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "reportId": "dtnext-2026-10-23",
+      "place": "Sellur",
+      "precision": "locality",
+      "lat": 9.93574,
+      "lng": 78.12183,
+      "osm": "node/13784338438",
+      "matched": "Sellur, Madurai, Madurai South, Madurai, Tamil Nadu, 625001, India",
+      "osmType": "suburb"
+    },
+    {
+      "reportId": "dtnext-2026-10-23",
+      "place": "Mattuthavani",
+      "precision": "locality",
+      "lat": 9.94772,
+      "lng": 78.15689,
+      "osm": "node/13784338433",
+      "matched": "Mattuthavani, K. Pudur, Madurai, Madurai North, Madurai, Tamil Nadu, 625020, India",
+      "osmType": "neighbourhood"
+    },
+    {
+      "reportId": "dtnext-2026-10-23",
+      "place": "Anna Nagar",
+      "precision": "locality",
+      "lat": 9.92167,
+      "lng": 78.14814,
+      "osm": "node/4621834759",
+      "matched": "Anna Nagar, Madurai, Madurai South, Madurai, Tamil Nadu, 625990, India",
+      "osmType": "suburb"
+    },
+    {
+      "reportId": "dtnext-2026-10-23",
+      "place": "Periyar Bus Stand",
+      "precision": "facility",
+      "lat": 9.91605,
+      "lng": 78.11117,
+      "osm": "node/12882891478",
+      "matched": "Periyar Bus Stand , Madurai, Cochin – Madurai - Dhanushkodi Road (Old NH49), Ellis Nagar, Madurai, Madurai South, Madurai, Tamil Nadu, 625011, India",
+      "osmType": "amenity"
+    },
+    {
+      "reportId": "dtnext-2026-10-23-recurring",
+      "place": "Madurai Railway Station",
+      "precision": "facility",
+      "lat": 9.91927,
+      "lng": 78.10988,
+      "osm": "way/757974347",
+      "matched": "Madurai Junction, West Veli Street, Ellis Nagar, Madurai, Madurai South, Madurai, Tamil Nadu, 625010, India",
+      "osmType": "railway"
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Sellur",
+      "precision": "locality",
+      "lat": 9.93574,
+      "lng": 78.12183,
+      "osm": "node/13784338438",
+      "matched": "Sellur, Madurai, Madurai South, Madurai, Tamil Nadu, 625001, India",
+      "osmType": "suburb"
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Athikulam",
+      "precision": "locality",
+      "lat": 9.95593,
+      "lng": 78.13679,
+      "osm": "node/13784338457",
+      "matched": "Athikulam, Madurai, Madurai North, Madurai, Tamil Nadu, 625014, India",
+      "osmType": "suburb"
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "BB Kulam",
+      "precision": "locality",
+      "lat": 9.94289,
+      "lng": 78.12496,
+      "osm": "node/13784338437",
+      "matched": "BB Kulam, Viswanathapuram, Madurai, Madurai North, Madurai, Tamil Nadu, 625002, India",
+      "osmType": "neighbourhood"
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Kadachanenthal",
+      "precision": "locality",
+      "lat": 9.97649,
+      "lng": 78.16819,
+      "osm": "node/13784338431",
+      "matched": "Kadachanenthal, Madurai, Madurai North, Madurai, Tamil Nadu, 625020, India",
+      "osmType": "suburb"
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Goripalayam",
+      "precision": "locality",
+      "lat": 9.93241,
+      "lng": 78.13046,
+      "osm": "node/13784338436",
+      "matched": "Goripalayam, Madurai, Madurai North, Madurai, Tamil Nadu, 625001, India",
+      "osmType": "suburb"
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Nelpettai",
+      "precision": "locality",
+      "lat": 9.92304,
+      "lng": 78.12612,
+      "osm": "node/13784338447",
+      "matched": "Nelpettai, Goripalayam, Madurai, Madurai South, Madurai, Tamil Nadu, 625001, India",
+      "osmType": "neighbourhood"
+    }
+  ],
+  "unmapped": [
+    {
+      "reportId": "dtnext-2026-10-23",
+      "place": "Koripalayam",
+      "reason": "No match in OpenStreetMap within Madurai."
+    },
+    {
+      "reportId": "dtnext-2026-10-23-recurring",
+      "place": "Masi streets",
+      "reason": "The article refers to the Masi streets, four streets around the temple, so no single point is given."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Mullai Nagar",
+      "reason": "OpenStreetMap's closest match is a residential (Mullai), not the locality."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "LBT Nagar",
+      "reason": "No match in OpenStreetMap within Madurai."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Tamukkam",
+      "reason": "OpenStreetMap's closest match is a highway (Tamukkam Bus Stop), not the locality."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Thallakulam",
+      "reason": "OpenStreetMap's closest match is a shop (Thallakulam), not the locality."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Azhagar Koil Salai",
+      "reason": "No match in OpenStreetMap within Madurai."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Simmakkal",
+      "reason": "OpenStreetMap's closest match is a highway (SIMMAKKAL), not the locality."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Keelavasal",
+      "reason": "No match in OpenStreetMap within Madurai."
+    },
+    {
+      "reportId": "pti-2024-10-26",
+      "place": "Yanaikkal",
+      "reason": "No match in OpenStreetMap within Madurai."
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "note": "Waterlogging reports transcribed from the cited articles. Place names are as written in each article. Coordinates are added by scripts/build-incidents.mjs from OpenStreetMap and are approximate locality centres, not the exact spots reported. Localities are mapped only when OpenStreetMap has a matching place (suburb, neighbourhood and similar); named facilities are mapped to that facility.",
+  "reports": [
+    {
+      "id": "dtnext-2026-10-23",
+      "eventDate": "2026-10-22",
+      "eventDateNote": "The article (23 Oct 2026) describes rain from \"Thursday evening\", which was 22 Oct 2026.",
+      "publisher": "DT Next (citing Daily Thanthi)",
+      "publishedOn": "2026-10-23",
+      "url": "https://www.dtnext.in/news/tamilnadu/heavy-rain-leaves-madurai-under-water-hundreds-of-homes-flooded-rs-23-crore-drainage-projects-planned",
+      "kind": "news",
+      "summary": "Four to five hours of heavy rain left several low-lying areas under knee-deep water; floodwater entered hundreds of houses in Sellur, and the Corporation pumped out water.",
+      "places": [
+        {
+          "name": "Sellur",
+          "kind": "locality"
+        },
+        {
+          "name": "Mattuthavani",
+          "kind": "locality"
+        },
+        {
+          "name": "Koripalayam",
+          "kind": "locality"
+        },
+        {
+          "name": "Anna Nagar",
+          "kind": "locality"
+        },
+        {
+          "name": "Periyar Bus Stand",
+          "kind": "facility"
+        }
+      ]
+    },
+    {
+      "id": "dtnext-2026-10-23-recurring",
+      "eventDate": null,
+      "eventDateNote": "Described as recurring rather than a single event.",
+      "publisher": "DT Next (reporting Madurai Corporation plans)",
+      "publishedOn": "2026-10-23",
+      "url": "https://www.dtnext.in/news/tamilnadu/heavy-rain-leaves-madurai-under-water-hundreds-of-homes-flooded-rs-23-crore-drainage-projects-planned",
+      "kind": "news",
+      "summary": "The Corporation announced drainage projects worth about Rs 23 crore to address recurring waterlogging at these places.",
+      "places": [
+        {
+          "name": "Madurai Railway Station",
+          "kind": "facility"
+        },
+        {
+          "name": "Masi streets",
+          "kind": "area",
+          "reason": "The article refers to the Masi streets, four streets around the temple, so no single point is given."
+        }
+      ]
+    },
+    {
+      "id": "pti-2024-10-26",
+      "eventDate": "2024-10-25",
+      "eventDateNote": "The report gives 10 cm of rain on Friday 25 Oct 2024, including 4.5 cm between 3:00 and 3:15 pm according to the India Meteorological Department.",
+      "publisher": "PTI via Deccan Herald",
+      "publishedOn": "2024-10-26",
+      "url": "https://www.deccanherald.com/india/tamil-nadu/heavy-downpour-in-15-minutes-brings-tamil-nadus-madurai-under-swathes-of-water-3250135",
+      "kind": "news",
+      "summary": "Intense rain caused waterlogging in several low-lying areas and water entered homes; the Commissioner reported inundation complaints from 12 locations in Zone 1 and 6 in Zone 2.",
+      "places": [
+        {
+          "name": "Sellur",
+          "kind": "locality"
+        },
+        {
+          "name": "Athikulam",
+          "kind": "locality"
+        },
+        {
+          "name": "BB Kulam",
+          "kind": "locality"
+        },
+        {
+          "name": "Mullai Nagar",
+          "kind": "locality"
+        },
+        {
+          "name": "Kadachanenthal",
+          "kind": "locality"
+        },
+        {
+          "name": "LBT Nagar",
+          "kind": "locality"
+        },
+        {
+          "name": "Tamukkam",
+          "kind": "locality"
+        },
+        {
+          "name": "Thallakulam",
+          "kind": "locality"
+        },
+        {
+          "name": "Azhagar Koil Salai",
+          "kind": "locality"
+        },
+        {
+          "name": "Goripalayam",
+          "kind": "locality"
+        },
+        {
+          "name": "Simmakkal",
+          "kind": "locality"
+        },
+        {
+          "name": "Nelpettai",
+          "kind": "locality"
+        },
+        {
+          "name": "Keelavasal",
+          "kind": "locality"
+        },
+        {
+          "name": "Yanaikkal",
+          "kind": "locality"
+        }
+      ]
+    }
+  ]
+}
