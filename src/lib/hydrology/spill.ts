@@ -67,7 +67,10 @@ export function fillAndSpill(
   const active = new Uint8Array(nodes)
   const nodeOf = (cell: number) => (labels[cell] >= 0 ? n + labels[cell] : cell)
 
-  // Exit of each depression: follow D8 from its deepest cell until leaving it.
+  // Exit of each depression: the cell after the last depression cell on the D8 path
+  // from its deepest cell. Barely-raised cells (under the depth threshold) are not part
+  // of a depression, and a path can step onto one and back in; taking the first cell
+  // outside would point the depression at a cell that drains straight back into it.
   const deepest = new Int32Array(count).fill(-1)
   for (let i = 0; i < n; i++) {
     const d = labels[i]
@@ -76,13 +79,16 @@ export function fillAndSpill(
   for (let d = 0; d < count; d++) {
     active[n + d] = 1
     let cell = deepest[d]
+    let exit = -1
     let guard = 0
-    while (cell >= 0 && labels[cell] === d) {
+    while (cell >= 0) {
       const code = directions[cell]
-      cell = code === D8_OUTLET ? -1 : downstreamOf(width, cell, code)
-      if (++guard > n) throw new FlowGraphError(`Depression ${d + 1} has no exit.`)
+      const next = code === D8_OUTLET ? -1 : downstreamOf(width, cell, code)
+      if (labels[cell] === d) exit = next
+      cell = next
+      if (++guard > n) throw new FlowGraphError(`The flow path from depression ${d + 1} does not end.`)
     }
-    if (cell >= 0) target[n + d] = nodeOf(cell)
+    if (exit >= 0) target[n + d] = nodeOf(exit)
   }
 
   let generatedM3 = 0
