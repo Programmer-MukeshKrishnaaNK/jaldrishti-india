@@ -148,8 +148,11 @@ describe('engine on a full-size area', () => {
 })
 
 // Uses the real Phase 1 loader against Microsoft Planetary Computer. Network-dependent,
-// so it only runs when PAANIPULSE_LIVE=1.
-describe.runIf(process.env.PAANIPULSE_LIVE === '1')('live Copernicus DEM input', () => {
+// so it only runs when PAANIPULSE_LIVE=1. The app's tsconfig has no Node types, so
+// the environment is read through globalThis.
+const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {}
+
+describe.runIf(env.PAANIPULSE_LIVE === '1')('live Copernicus DEM input', () => {
   it('analyses a real 3 × 3 km area of Madurai', async () => {
     const dem = await loadCopernicusGrid([78.1004, 9.9126, 78.1278, 9.9397])
     const result = runHydrology(fromElevationGrid(dem), { drainageThresholdM2: 100_000 })

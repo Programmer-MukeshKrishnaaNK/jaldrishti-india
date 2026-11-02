@@ -25,7 +25,7 @@ describe('heightAboveNearestDrainage', () => {
       }
     }
     // Upstream of the first channel cell, flow runs down the centre to row 4.
-    expect(hand[0 * W + mid]).toBeCloseTo(0.4, 4)
+    expect(hand[mid]).toBeCloseTo(0.4, 4) // row 0
     expect(result.summary.drainageCells).toBe(H - 4)
     expect(result.summary.unreachedCells).toBe(0)
   })
@@ -42,7 +42,7 @@ describe('depressionStorage', () => {
   const CELL = 30
   // Two rectangular pits in a gently tilted plateau: 5 × 4 cells, 2 m deep, and
   // 3 × 3 cells, 0.5 m deep, both well inside the edges.
-  const plateau = (row: number, col: number) => 100 - 0.001 * col
+  const plateau = (_row: number, col: number) => 100 - 0.001 * col
   const grid = syntheticGrid(40, 30, (row, col) => {
     if (row >= 10 && row < 14 && col >= 10 && col < 15) return plateau(row, col) - 2
     if (row >= 20 && row < 23 && col >= 28 && col < 31) return plateau(row, col) - 0.5
