@@ -21,6 +21,11 @@ class CellHeap {
     return this.size
   }
 
+  /** Key of the lowest cell; only valid when the heap is not empty. */
+  peekKey(): number {
+    return this.keys[0]
+  }
+
   private less(a: number, b: number): boolean {
     return this.keys[a] < this.keys[b] || (this.keys[a] === this.keys[b] && this.order[a] < this.order[b])
   }
@@ -127,7 +132,12 @@ export function priorityFlood(grid: HydroGrid): FillResult {
   }
 
   while (pitHead < pitTail || heap.length > 0) {
-    const c = pitHead < pitTail ? pit[pitHead++] : heap.pop()
+    // Heap cells at the current pit level go first. Filling is the same either way,
+    // but on flats this lets every boundary cell at that level advance together, so
+    // the flood (and the flat routing traced from it) spreads evenly inwards instead
+    // of from whichever cell happened to be popped first.
+    const usePit = pitHead < pitTail && (heap.length === 0 || heap.peekKey() > filled[pit[pitHead]])
+    const c = usePit ? pit[pitHead++] : heap.pop()
     const row = (c / width) | 0
     const col = c - row * width
     const level = filled[c]
