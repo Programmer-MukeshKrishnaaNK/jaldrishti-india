@@ -8,6 +8,8 @@ export const SOURCES = {
   terrain: 'pp-terrain',
   flow: 'pp-flow',
   depressions: 'pp-depressions',
+  hotspots: 'pp-hotspots',
+  incidents: 'pp-incidents',
 } as const
 
 export const LAYERS = {
@@ -18,7 +20,27 @@ export const LAYERS = {
   flow: 'pp-flow-line',
   depressionDot: 'pp-depression-dot',
   depressionRank: 'pp-depression-rank',
+  hotspotDot: 'pp-hotspot-dot',
+  hotspotRank: 'pp-hotspot-rank',
+  incident: 'pp-incident',
 } as const
+
+const DIAMOND_ICON = 'pp-diamond'
+
+/** A laterite diamond with a silt outline, drawn once for documented report markers. */
+function diamondImage(size = 18): { width: number; height: number; data: Uint8Array } {
+  const data = new Uint8Array(size * size * 4)
+  const c = (size - 1) / 2
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const d = Math.abs(x - c) + Math.abs(y - c)
+      const i = (y * size + x) * 4
+      if (d <= c - 2) data.set([0xb4, 0x53, 0x2a, 255], i)
+      else if (d <= c) data.set([0xf1, 0xed, 0xe4, 255], i)
+    }
+  }
+  return { width: size, height: size, data }
+}
 
 const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] }
 
@@ -76,6 +98,9 @@ export function addOverlayLayers(map: MapLibreMap): void {
   // lineMetrics enables the gradient that shows which way each flow line points.
   map.addSource(SOURCES.flow, { type: 'geojson', data: EMPTY, lineMetrics: true })
   map.addSource(SOURCES.depressions, { type: 'geojson', data: EMPTY })
+  map.addSource(SOURCES.hotspots, { type: 'geojson', data: EMPTY })
+  map.addSource(SOURCES.incidents, { type: 'geojson', data: EMPTY })
+  if (!map.hasImage(DIAMOND_ICON)) map.addImage(DIAMOND_ICON, diamondImage())
 
   map.addLayer({
     id: LAYERS.flow,
@@ -111,6 +136,35 @@ export function addOverlayLayers(map: MapLibreMap): void {
       'icon-allow-overlap': true,
     },
     paint: { 'text-color': ink },
+  })
+  map.addLayer({
+    id: LAYERS.hotspotDot,
+    type: 'circle',
+    source: SOURCES.hotspots,
+    paint: {
+      'circle-radius': ['case', ['get', 'selected'], 13, 10],
+      'circle-color': ['match', ['get', 'category'], 'higher', '#8a5a00', '#e3c473'],
+      'circle-stroke-color': ['case', ['get', 'selected'], ink, silt],
+      'circle-stroke-width': ['case', ['get', 'selected'], 3, 1.5],
+    },
+  })
+  map.addLayer({
+    id: LAYERS.hotspotRank,
+    type: 'symbol',
+    source: SOURCES.hotspots,
+    layout: {
+      'text-field': ['to-string', ['get', 'rank']],
+      'text-font': ['Noto Sans Bold'],
+      'text-size': 11,
+      'text-allow-overlap': true,
+    },
+    paint: { 'text-color': ['match', ['get', 'category'], 'higher', '#ffffff', ink] },
+  })
+  map.addLayer({
+    id: LAYERS.incident,
+    type: 'symbol',
+    source: SOURCES.incidents,
+    layout: { 'icon-image': DIAMOND_ICON, 'icon-allow-overlap': true },
   })
 
   map.addLayer({

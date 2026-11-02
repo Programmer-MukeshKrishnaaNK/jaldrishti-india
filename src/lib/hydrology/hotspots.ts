@@ -73,7 +73,14 @@ export interface Hotspot {
   pondedVolumeM3: number
   /** Ranks of Phase 2 depressions the hotspot overlaps. */
   depressionRanks: number[]
-  flags: { nearEdge: boolean; deepHollow: boolean; onWater: boolean; missingLandCover: boolean }
+  flags: {
+    nearEdge: boolean
+    deepHollow: boolean
+    onWater: boolean
+    /** Touches cells that are mostly permanent water, such as a river or tank. */
+    besideWater: boolean
+    missingLandCover: boolean
+  }
   /**
    * Reduced when the hotspot overlaps a hollow deep enough to suggest a data artefact
    * or lies mostly on permanent water. It never changes the category, only the order.
@@ -179,6 +186,7 @@ export function findHotspots(input: HotspotInput, scores: CellScores): Hotspot[]
     let water = 0
     let missingLandCover = false
     let nearEdge = false
+    let besideWater = false
     const ranks = new Set<number>()
 
     while (head < tail) {
@@ -210,6 +218,7 @@ export function findHotspots(input: HotspotInput, scores: CellScores): Hotspot[]
         const c = col + dc
         if (r < 0 || c < 0 || r >= height || c >= width) continue
         const j = r * width + c
+        if ((input.waterShare?.[j] ?? 0) > 0.5) besideWater = true
         if (!seen[j] && scores.category[j] !== 255 && scores.category[j] > 0) {
           seen[j] = 1
           queue[tail++] = j
@@ -242,6 +251,7 @@ export function findHotspots(input: HotspotInput, scores: CellScores): Hotspot[]
         nearEdge,
         deepHollow: depressionRanks.some((r) => (input.depressionMaxDepthM[r - 1] ?? 0) > DEEP_HOLLOW_M),
         onWater: water > cells / 2,
+        besideWater: besideWater || water > 0,
         missingLandCover,
       },
       weight,

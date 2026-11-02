@@ -158,3 +158,18 @@
   margin: 0 0 var(--s1);
   font-weight: 400;
 }
+
+.layer-option[aria-disabled='true'] {
+  color: var(--ink-2);
+  cursor: not-allowed;
+}
+
+.badge-scenario {
+  color: var(--simulated);
+  border: 1px solid var(--simulated);
+}
+
+.badge-documented {
+  color: var(--documented);
+  border: 1px solid var(--documented);
+}

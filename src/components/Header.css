@@ -13,6 +13,10 @@
   display: flex;
 }
 
+.header-method {
+  flex: none;
+}
+
 .header-tagline {
   margin: 0;
   padding-left: var(--s4);

@@ -20,8 +20,12 @@ Working now:
 - Analysis-area selection: a 3 × 3 km square at a searched place or the map centre, or a rectangle drawn on the map, limited to 25 km².
 - Real elevation for the selected area, read in the browser from Copernicus DEM GLO-30 and shown as a colour-and-hillshade terrain image with a legend and a pointer readout.
 - Terrain flow analysis of the loaded elevation, run in a Web Worker: depression filling, D8 flow direction, flow accumulation, height above nearest drainage (HAND) and depression storage, each shown as a map layer with a legend, units and values at the pointer.
+- Hypothetical rainfall scenarios (50, 100, 150 mm or a custom total): runoff from ESA WorldCover land cover and editable coefficients, fill-and-spill through terrain depressions with a full volume balance, and a comparison across scenarios.
+- Hotspot screening with relative categories, ranked hotspots and a "Why here?" explanation generated from each hotspot's values.
+- Documented waterlogging reports for Madurai from dated news articles, shown as context.
+- A method and limitations dialog in the app; the full write-up is in [docs/methodology.md](docs/methodology.md).
 
-Not implemented yet: rainfall scenarios, hotspot ranking and documented incidents.
+PaaniPulse is a screening prototype, not a flood forecast or warning system.
 
 ## Terrain analysis
 
@@ -42,14 +46,26 @@ A 25 km² area (about 27,000 cells) takes roughly 40 ms in testing; a 3 × 3 km 
 - Storm drains, culverts, kerbs and channels narrower than a cell are not represented.
 - Only area inside the selection contributes to accumulation and HAND.
 
+## Rainfall scenarios and hotspots
+
+Scenarios reuse the terrain analysis, so changing rainfall or coefficients takes milliseconds and nothing is downloaded again.
+
+- **Runoff:** rainfall (mm) ÷ 1000 × C × cell area, where C is the area-weighted coefficient of the WorldCover pixels in each cell. Coefficients are documented assumptions, editable in the app. Cells with under half their pixels classified generate no runoff and are counted.
+- **Fill and spill:** depressions act as reservoirs with their terrain storage capacity; runoff is routed downstream, stored until full, and the excess spills on. The app reports generated, held and departing volume and the residual.
+- **Screening:** points for modelled ponding, passing runoff, HAND and slope give higher or moderate relative concentration potential. Hotspots overlapping very deep hollows or permanent water have reduced confidence.
+
+See [docs/methodology.md](docs/methodology.md) for equations, coefficients, thresholds and limitations.
+
+No observed rainfall is bundled: IMD gridded rainfall is publicly downloadable, but its redistribution terms could not be confirmed.
+
 ### Tests
 
 ```bash
 npm test                         # synthetic grids with known answers
-PAANIPULSE_LIVE=1 npm test       # also analyses a real Madurai area via Planetary Computer
+PAANIPULSE_LIVE=1 npm test       # also runs real Madurai and Guwahati areas via Planetary Computer
 ```
 
-The tests check a paraboloid pit against its analytic volume (within 1%), downslope directions on tilted planes, exact contributing counts in a converging valley, flat terrain, missing-data holes, exact HAND in a V-shaped valley, pit storage volumes, and a 25 km² benchmark.
+The tests check a paraboloid pit against its analytic volume (within 1%), downslope directions on tilted planes, exact contributing counts in a converging valley, flat terrain, missing-data holes, exact HAND in a V-shaped valley, pit storage volumes, a 25 km² benchmark, runoff unit conversion and missing land cover, volume conservation and spill cascades, hotspot ranking, explanations and scenario comparison.
 
 ## How elevation is loaded
 
@@ -102,5 +118,7 @@ See [docs/architecture.md](docs/architecture.md) for the code layout.
 - Place names: © OpenStreetMap contributors (ODbL), via the bundled gazetteer, [Photon](https://photon.komoot.io) and [Nominatim](https://nominatim.org). Nominatim requests are limited to one per second and cached.
 - Elevation: Copernicus DEM GLO-30 © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA, accessed through [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/cop-dem-glo-30).
 - Fallback elevation: [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) on AWS Open Data, including SRTM (NASA/USGS) and GMTED2010.
+- Land cover: © ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium, CC BY 4.0, accessed through [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/esa-worldcover).
+- Documented reports: [PTI via Deccan Herald, 26 Oct 2024](https://www.deccanherald.com/india/tamil-nadu/heavy-downpour-in-15-minutes-brings-tamil-nadus-madurai-under-swathes-of-water-3250135) and [DT Next, 23 Oct 2026](https://www.dtnext.in/news/tamilnadu/heavy-rain-leaves-madurai-under-water-hundreds-of-homes-flooded-rs-23-crore-drainage-projects-planned); locations from OpenStreetMap via `scripts/build-incidents.mjs`.
 
 GLO-30 is a surface model: heights include buildings and trees, and water surfaces are edited flat. Its stated absolute vertical accuracy is better than 4 m for 90% of points.

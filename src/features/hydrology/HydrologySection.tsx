@@ -16,6 +16,7 @@ interface HydrologySectionProps {
   onThresholdChange: (thresholdM2: number) => void
   pointer: PointerPosition | null
   onRetry: () => void
+  scenarioReady: boolean
 }
 
 const STAGES: { id: HydroStage; label: string }[] = [
@@ -25,6 +26,8 @@ const STAGES: { id: HydroStage; label: string }[] = [
   { id: 'hand', label: 'Height above nearest drainage' },
   { id: 'storage', label: 'Depression storage' },
 ]
+
+const BADGE = { source: 'Measured', derived: 'Derived', scenario: 'Simulated' } as const
 
 const ARROWS: Record<number, string> = { 1: '→', 2: '↘', 4: '↓', 8: '↙', 16: '←', 32: '↖', 64: '↑', 128: '↗' }
 const DIRECTION_NAMES: Record<number, string> = { 1: 'E', 2: 'SE', 4: 'S', 8: 'SW', 16: 'W', 32: 'NW', 64: 'N', 128: 'NE' }
@@ -82,19 +85,24 @@ export function HydrologySection(props: HydrologySectionProps) {
         <>
           <fieldset className="layer-picker">
             <legend className="layer-picker-title">Map layer</legend>
-            {ANALYSIS_LAYERS.map((option) => (
-              <label key={option.id} className="layer-option">
-                <input
-                  type="radio"
-                  name={radioName}
-                  value={option.id}
-                  checked={layer === option.id}
-                  onChange={() => props.onLayerChange(option.id)}
-                />
-                <span className="layer-option-name">{option.name}</span>
-                <span className={`badge badge-${option.kind}`}>{option.kind === 'source' ? 'Measured' : 'Derived'}</span>
-              </label>
-            ))}
+            {ANALYSIS_LAYERS.map((option) => {
+              const unavailable = option.kind === 'scenario' && !props.scenarioReady
+              return (
+                <label key={option.id} className="layer-option" aria-disabled={unavailable}>
+                  <input
+                    type="radio"
+                    name={radioName}
+                    value={option.id}
+                    checked={layer === option.id}
+                    disabled={unavailable}
+                    onChange={() => props.onLayerChange(option.id)}
+                  />
+                  <span className="layer-option-name">{option.name}</span>
+                  <span className={`badge badge-${option.kind}`}>{BADGE[option.kind]}</span>
+                </label>
+              )
+            })}
+            {!props.scenarioReady && <p className="panel-note">Simulated layers appear after a rainfall scenario runs.</p>}
           </fieldset>
 
           <div className="layer-detail">

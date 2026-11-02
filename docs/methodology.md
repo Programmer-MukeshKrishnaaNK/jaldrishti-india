@@ -71,7 +71,7 @@ The three water-concentration criteria carry up to two points each; slope carrie
 - **Moderate relative concentration potential:** 3–4 points.
 - **Lower:** fewer points, or no points from ponding or runoff. A cell needs a water criterion to rise above lower, so zero rainfall produces no hotspots.
 
-Adjacent higher and moderate cells form a hotspot. Hotspots are ranked higher before moderate, then standard before reduced confidence, then by points × area and by ponded volume. Confidence is reduced when a hotspot overlaps a hollow more than 3 m deep (often walls, buildings, embankments or bridges in a surface model) or lies mostly on permanent water. Each explanation is generated from the hotspot's own values, one sentence per scoring criterion.
+Adjacent higher and moderate cells form a hotspot. Hotspots are ranked higher before moderate, then standard before reduced confidence, then by points × area and by ponded volume. Confidence is reduced when a hotspot overlaps a hollow more than 3 m deep (often walls, buildings, embankments or bridges in a surface model) or lies mostly on permanent water. Hotspots beside permanent water, such as a river bank, carry a caution but keep their confidence. Each explanation is generated from the hotspot's own values, one sentence per scoring criterion.
 
 These categories are relative within the selected area. They are not probabilities and not official risk categories.
 

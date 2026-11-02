@@ -139,6 +139,29 @@ describe('hotspot screening', () => {
     expect(higher.find((h) => h.confidence === 'reduced')?.flags.deepHollow).toBe(true)
   })
 
+  it('notes when a hotspot lies beside mapped permanent water', () => {
+    const b = base(valley)
+    const plain = runScenario(b, coefficients, 100)
+    const top = plain.hotspots[0]
+    expect(top.flags.besideWater).toBe(false)
+    // Mark the cell east of the hotspot's scoring cell as water.
+    const waterShare = new Float32Array(W * H)
+    waterShare[top.peak.index + 1] = 1
+    const withWater = runScenario(b, coefficients, 100, waterShare)
+    const flagged = withWater.hotspots.find((h) => h.peak.index === top.peak.index)
+    expect(flagged?.flags.besideWater).toBe(true)
+    expect(explainHotspot(flagged!, 100, withWater.spill.depressions).cautions.join(' ')).toContain('beside mapped permanent water')
+  })
+
+  it('explains why runoff does not score inside a hollow', () => {
+    const result = runScenario(base(valley), coefficients, 100)
+    const top = result.hotspots[0]
+    expect(top.peak.pondDepthM).toBeGreaterThan(0)
+    if (top.peak.criteria.runoff === 0) {
+      expect(explainHotspot(top, 100, result.spill.depressions).notCounted.join(' ')).toContain('collects in the hollow')
+    }
+  })
+
   it('rejects invalid rainfall before doing any work', () => {
     expect(() => runScenario(base(valley), coefficients, -5)).toThrow()
   })

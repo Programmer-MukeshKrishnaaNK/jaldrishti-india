@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatLatitude, formatLongitude, formatZoom } from '../../lib/format'
+import { WORLDCOVER_SOURCE } from '../../lib/landcover/worldcover'
 import { BASEMAP } from '../../map/config'
 import type { BasemapStatus, PointerPosition } from '../../types/map'
 import './ExplorePanel.css'
@@ -20,10 +21,17 @@ const BASEMAP_LABEL: Record<BasemapStatus['state'], string> = {
   error: 'Unavailable',
 }
 
-const AVAILABLE = ['Place search', 'Area selection', 'Elevation (Copernicus GLO-30)', 'Terrain flow analysis']
+const AVAILABLE = [
+  'Place search',
+  'Area selection',
+  'Elevation (Copernicus GLO-30)',
+  'Terrain flow analysis',
+  'Hypothetical rainfall scenarios',
+  'Hotspot screening',
+]
 
-// Capabilities planned for PaaniPulse that this build does not provide yet.
-const PLANNED = ['Rainfall scenarios', 'Documented incidents']
+// Capabilities that exist only in part.
+const PARTIAL = ['Documented reports (Madurai only)']
 
 export function ExplorePanel({ basemap, pointer, zoom, pointerElevation, terrainLoaded, children }: ExplorePanelProps) {
   let elevation = '—'
@@ -72,10 +80,10 @@ export function ExplorePanel({ basemap, pointer, zoom, pointerElevation, terrain
               <span className="status status-ready">Available</span>
             </li>
           ))}
-          {PLANNED.map((name) => (
+          {PARTIAL.map((name) => (
             <li key={name}>
               <span>{name}</span>
-              <span className="status status-planned">Not yet available</span>
+              <span className="status status-planned">Partial</span>
             </li>
           ))}
         </ul>
@@ -94,6 +102,11 @@ export function ExplorePanel({ basemap, pointer, zoom, pointerElevation, terrain
           provided under COPERNICUS by the European Union and ESA, read via{' '}
           <a href="https://planetarycomputer.microsoft.com/dataset/cop-dem-glo-30">Microsoft Planetary Computer</a>.
         </p>
+        <p className="panel-text">
+          Land cover: {WORLDCOVER_SOURCE.attribution}, {WORLDCOVER_SOURCE.licence}, read via{' '}
+          <a href={WORLDCOVER_SOURCE.url}>Microsoft Planetary Computer</a>.
+        </p>
+        <p className="panel-text">Documented reports: the news articles listed under Documented reports.</p>
       </section>
     </aside>
   )

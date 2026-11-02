@@ -44,6 +44,8 @@ export function explainHotspot(hotspot: Hotspot, rainfallMm: number, fills: Depr
     reasons.push(
       `Runoff from about ${km2(peak.contributingAreaM2)} km² upslope passes through, roughly ${m3(peak.passingM3)} m³ in this scenario (${criteria.runoff} pt).`,
     )
+  } else if (peak.pondDepthM > 0) {
+    notCounted.push('Runoff collects in the hollow here rather than passing through, so the passing-runoff criterion does not apply.')
   } else {
     notCounted.push('Little scenario runoff passes through the highest-scoring cell.')
   }
@@ -61,6 +63,11 @@ export function explainHotspot(hotspot: Hotspot, rainfallMm: number, fills: Depr
 
   const cautions: string[] = []
   if (flags.onWater) cautions.push('Most of this hotspot is mapped as permanent water, where concentration is expected; it is not evidence of street waterlogging.')
+  if (flags.besideWater && !flags.onWater) {
+    cautions.push(
+      'It lies beside mapped permanent water such as a river or tank. Low ground there may reflect the channel, its banks or embankments in the surface model.',
+    )
+  }
   if (flags.deepHollow) {
     cautions.push(
       `It overlaps a hollow more than ${DEEP_HOLLOW_M} m deep. In a surface model that often comes from walls, buildings, embankments or bridges rather than ground that holds water.`,

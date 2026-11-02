@@ -1,6 +1,8 @@
 import type { FeatureCollection, LineString, Point } from 'geojson'
 import type { ElevationGrid } from '../lib/dem/types'
 import { downstreamOf, D8_NODATA, D8_OUTLET } from '../lib/hydrology/d8'
+import type { IncidentPoint } from '../lib/evidence/incidents'
+import type { Hotspot } from '../lib/hydrology/hotspots'
 import type { Depression } from '../lib/hydrology/storage'
 
 const mercatorY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))
@@ -48,6 +50,33 @@ export function depressionMarkers(grid: ElevationGrid, depressions: Depression[]
       type: 'Feature',
       properties: { rank: d.rank },
       geometry: { type: 'Point', coordinates: gridToLngLat(grid, d.centreRow + 0.5, d.centreCol + 0.5) },
+    })),
+  }
+}
+
+/** Numbered points at the scoring cell of each listed hotspot. */
+export function hotspotMarkers(grid: ElevationGrid, hotspots: Hotspot[], selectedRank: number | null, count = 10): FeatureCollection<Point> {
+  return {
+    type: 'FeatureCollection',
+    features: hotspots.slice(0, count).map((h) => {
+      const row = Math.floor(h.peak.index / grid.width)
+      const col = h.peak.index % grid.width
+      return {
+        type: 'Feature',
+        properties: { rank: h.rank, category: h.category, selected: h.rank === selectedRank },
+        geometry: { type: 'Point', coordinates: gridToLngLat(grid, row + 0.5, col + 0.5) },
+      }
+    }),
+  }
+}
+
+export function incidentMarkers(points: IncidentPoint[]): FeatureCollection<Point> {
+  return {
+    type: 'FeatureCollection',
+    features: points.map((p) => ({
+      type: 'Feature',
+      properties: { place: p.place, reportId: p.reportId },
+      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
     })),
   }
 }

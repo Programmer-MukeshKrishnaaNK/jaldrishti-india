@@ -1,8 +1,17 @@
 import { hillshade } from '../dem/render'
 import type { ElevationGrid } from '../dem/types'
-import type { HydroPayload } from '../../workers/hydrologyProtocol'
+import type { HydroPayload, ScenarioPayload } from '../../workers/hydrologyProtocol'
 
-export type AnalysisLayerId = 'elevation' | 'fillDepth' | 'direction' | 'accumulation' | 'hand' | 'storage'
+export type AnalysisLayerId =
+  | 'elevation'
+  | 'fillDepth'
+  | 'direction'
+  | 'accumulation'
+  | 'hand'
+  | 'storage'
+  | 'runoff'
+  | 'ponding'
+  | 'hotspots'
 
 export interface LegendClass {
   /** Inclusive lower bound in the layer's unit. */
@@ -14,7 +23,8 @@ export interface LegendClass {
 export interface AnalysisLayer {
   id: AnalysisLayerId
   name: string
-  kind: 'source' | 'derived'
+  /** Measured source data, derived from it, or the output of a rainfall scenario. */
+  kind: 'source' | 'derived' | 'scenario'
   unit: string
   explanation: string
   caveat: string
@@ -110,7 +120,57 @@ export const ANALYSIS_LAYERS: AnalysisLayer[] = [
     ],
     uncoloured: 'No storage',
   },
+  {
+    id: 'runoff',
+    name: 'Scenario runoff passing',
+    kind: 'scenario',
+    unit: 'm³',
+    explanation:
+      'Modelled runoff volume leaving each cell downstream under the chosen rainfall, after depressions upstream have taken what they can hold.',
+    caveat: 'An event total from assumed runoff coefficients, not a measured flow. Drains and culverts are not represented.',
+    classes: [
+      { from: 10, label: '10–100', color: '#d6e6f4' },
+      { from: 100, label: '100–1,000', color: '#a8c9e8' },
+      { from: 1000, label: '1,000–10,000', color: '#6fa3d4' },
+      { from: 10_000, label: '10,000–50,000', color: '#1f6fb5' },
+      { from: 50_000, label: '≥ 50,000', color: '#123f69' },
+    ],
+    uncoloured: 'Under 10 m³',
+  },
+  {
+    id: 'ponding',
+    name: 'Modelled ponding depth',
+    kind: 'scenario',
+    unit: 'm',
+    explanation:
+      'Depth of water the model holds in terrain hollows under the chosen rainfall, filling each hollow from its lowest cells up to its spill level.',
+    caveat: 'A volume balance on a surface model, not a predicted flood depth. Hollows formed by walls, buildings or bridges may not hold water on the ground.',
+    classes: [
+      { from: 0.01, label: '0.01–0.1', color: '#d6e6f4' },
+      { from: 0.1, label: '0.1–0.25', color: '#a8c9e8' },
+      { from: 0.25, label: '0.25–0.5', color: '#6fa3d4' },
+      { from: 0.5, label: '0.5–1', color: '#1f6fb5' },
+      { from: 1, label: '≥ 1', color: '#123f69' },
+    ],
+    uncoloured: 'No modelled ponding',
+  },
+  {
+    id: 'hotspots',
+    name: 'Relative hotspot categories',
+    kind: 'scenario',
+    unit: '',
+    explanation:
+      'Screening classes from points for ponding, runoff passing, HAND and slope. Numbers mark the ranked hotspots listed in the panel.',
+    caveat: 'Relative to this area and scenario. Not a flood probability or an official risk category.',
+    classes: [
+      { from: 1, label: 'Moderate relative concentration potential', color: '#e3c473' },
+      { from: 2, label: 'Higher relative concentration potential', color: '#8a5a00' },
+    ],
+    uncoloured: 'Lower relative concentration potential',
+  },
 ]
+
+export const SCENARIO_LAYERS: AnalysisLayerId[] = ['runoff', 'ponding', 'hotspots']
 
 export function analysisLayer(id: AnalysisLayerId): AnalysisLayer {
   return ANALYSIS_LAYERS.find((layer) => layer.id === id)!
@@ -127,7 +187,12 @@ function classColour(classes: LegendClass[], value: number): number[] | null {
  * Draws a derived layer over a grey hillshade of the measured elevations. Cells with
  * no data stay transparent; cells outside every class show only the hillshade.
  */
-export function renderAnalysisLayer(id: Exclude<AnalysisLayerId, 'elevation'>, grid: ElevationGrid, result: HydroPayload) {
+export function renderAnalysisLayer(
+  id: Exclude<AnalysisLayerId, 'elevation'>,
+  grid: ElevationGrid,
+  result: HydroPayload,
+  scenario: ScenarioPayload | null,
+) {
   const shade = hillshade(grid)
   const values: ArrayLike<number> | null =
     id === 'fillDepth'
@@ -138,7 +203,13 @@ export function renderAnalysisLayer(id: Exclude<AnalysisLayerId, 'elevation'>, g
           ? result.hand
           : id === 'storage'
             ? result.storageM3
-            : null
+            : id === 'runoff'
+              ? (scenario?.passingM3 ?? null)
+              : id === 'ponding'
+                ? (scenario?.pondDepthM ?? null)
+                : id === 'hotspots'
+                  ? (scenario?.category.map((c) => (c === 255 ? 0 : c)) ?? null)
+                  : null
   const classes = analysisLayer(id).classes
   const rgba = new Uint8ClampedArray(grid.width * grid.height * 4)
 

@@ -32,6 +32,8 @@ const ZOOM_FOR_AREA = 13.3
 export interface FlyRequest {
   key: number
   place: Place
+  /** Overrides the zoom chosen from the place kind. */
+  zoom?: number
 }
 
 interface MapViewProps {
@@ -39,6 +41,8 @@ interface MapViewProps {
   terrainImage: { url: string; bounds: Bbox } | null
   flowLines: FeatureCollection | null
   depressionPoints: FeatureCollection | null
+  hotspotPoints: FeatureCollection | null
+  incidentPoints: FeatureCollection | null
   drawing: boolean
   flyRequest: FlyRequest | null
   onSelectionDrawn: (bbox: Bbox) => void
@@ -50,7 +54,8 @@ interface MapViewProps {
 }
 
 export function MapView(props: MapViewProps) {
-  const { selection, terrainImage, flowLines, depressionPoints, drawing, flyRequest, onStatusChange } = props
+  const { selection, terrainImage, flowLines, depressionPoints, hotspotPoints, incidentPoints, drawing, flyRequest, onStatusChange } =
+    props
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [status, setStatus] = useState<BasemapStatus>({ state: 'loading' })
@@ -174,6 +179,18 @@ export function MapView(props: MapViewProps) {
     map.getSource<GeoJSONSource>(SOURCES.depressions)?.setData(depressionPoints ?? EMPTY_FEATURES)
   }, [ready, depressionPoints])
 
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    map.getSource<GeoJSONSource>(SOURCES.hotspots)?.setData(hotspotPoints ?? EMPTY_FEATURES)
+  }, [ready, hotspotPoints])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    map.getSource<GeoJSONSource>(SOURCES.incidents)?.setData(incidentPoints ?? EMPTY_FEATURES)
+  }, [ready, incidentPoints])
+
   // Fly to a chosen place.
   useEffect(() => {
     const map = mapRef.current
@@ -185,7 +202,7 @@ export function MapView(props: MapViewProps) {
     } else {
       map.flyTo({
         center: [place.lng, place.lat],
-        zoom: isRegion(place) ? (ZOOM_FOR_REGION[place.kind] ?? 8) : ZOOM_FOR_AREA,
+        zoom: flyRequest.zoom ?? (isRegion(place) ? (ZOOM_FOR_REGION[place.kind] ?? 8) : ZOOM_FOR_AREA),
         duration: 1200,
       })
     }
