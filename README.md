@@ -19,8 +19,37 @@ Working now:
 - Place search across India: a bundled list of states, districts, cities and larger towns, live suggestions from Photon, and full search via Nominatim.
 - Analysis-area selection: a 3 × 3 km square at a searched place or the map centre, or a rectangle drawn on the map, limited to 25 km².
 - Real elevation for the selected area, read in the browser from Copernicus DEM GLO-30 and shown as a colour-and-hillshade terrain image with a legend and a pointer readout.
+- Terrain flow analysis of the loaded elevation, run in a Web Worker: depression filling, D8 flow direction, flow accumulation, height above nearest drainage (HAND) and depression storage, each shown as a map layer with a legend, units and values at the pointer.
 
-Not implemented yet: runoff analysis, rainfall scenarios, hotspot ranking and documented incidents.
+Not implemented yet: rainfall scenarios, hotspot ranking and documented incidents.
+
+## Terrain analysis
+
+All five steps run on the elevation grid exactly as loaded, in the browser. Source code is in `src/lib/hydrology/`.
+
+1. **Depression filling** — Priority-Flood (Barnes, Lehman & Mulla 2014). The flood starts from every valid cell on the area edge or beside missing data, where water can leave, and raises each enclosed hollow to its spill level. The measured elevations are kept separately; the difference is the filling depth.
+2. **Flow direction** — D8 on the filled surface: each cell drains to the neighbour with the steepest drop divided by the true distance between cell centres, using each row's real cell width and height. Cells on flats and in filled hollows follow the path the flood took back towards the spill point, which keeps the flow network free of loops. Directions use the codes 1 = E, 2 = SE, 4 = S, 8 = SW, 16 = W, 32 = NW, 64 = N, 128 = NE, with 0 for cells that drain out of the area and 255 for missing data.
+3. **Flow accumulation** — a single topological pass gives the number of cells and the ground area draining through each cell, and rejects any direction grid that contains a cycle.
+4. **HAND** — cells whose contributing area reaches a chosen threshold (0.05–1 km², default 0.1 km²) are drainage cells. Every other cell's HAND is its height above the first drainage cell on its flow path, measured on the filled surface. Cells whose path leaves the area first are reported as such.
+5. **Depression storage** — filling depth times real cell area, grouped into connected depressions and ranked by volume. Depressions within two cells of the area edge or missing data are flagged, because their spill level may depend on terrain outside the area.
+
+A 25 km² area (about 27,000 cells) takes roughly 40 ms in testing; a 3 × 3 km area of Madurai takes under 20 ms.
+
+### What the analysis does and does not show
+
+- It describes how the **terrain model** directs and holds water. HAND is a relative height, not a flood depth; storage is the capacity of hollows in the model, not water present; accumulation is upslope area, not discharge.
+- GLO-30 is a surface model at about 30 m. Buildings, walls, bridges and embankments are part of the heights, so they can dam modelled flow and create hollows that do not exist on the ground. In central Madurai, for example, the second-largest depression lies on the Meenakshi Amman Temple complex, enclosed by its walls and towers in the data, and the third lies on the Vaigai river, whose surface is flattened in the data.
+- Storm drains, culverts, kerbs and channels narrower than a cell are not represented.
+- Only area inside the selection contributes to accumulation and HAND.
+
+### Tests
+
+```bash
+npm test                         # synthetic grids with known answers
+PAANIPULSE_LIVE=1 npm test       # also analyses a real Madurai area via Planetary Computer
+```
+
+The tests check a paraboloid pit against its analytic volume (within 1%), downslope directions on tilted planes, exact contributing counts in a converging valley, flat terrain, missing-data holes, exact HAND in a V-shaped valley, pit storage volumes, and a 25 km² benchmark.
 
 ## How elevation is loaded
 
@@ -50,6 +79,7 @@ npm install
 npm run dev        # http://localhost:5173/jaldrishti-india/
 npm run typecheck
 npm run lint
+npm test
 npm run build      # outputs dist/
 ```
 
@@ -61,7 +91,7 @@ node scripts/build-gazetteer.mjs
 
 ## Deployment
 
-Pushes to `main` run `.github/workflows/deploy.yml`, which lints, builds and publishes `dist/` to GitHub Pages at
+Pushes to `main` run `.github/workflows/deploy.yml`, which lints, tests, builds and publishes `dist/` to GitHub Pages at
 `https://programmer-mukeshkrishnaank.github.io/jaldrishti-india/`. The repository's Pages source must be set to **GitHub Actions**.
 
 See [docs/architecture.md](docs/architecture.md) for the code layout.

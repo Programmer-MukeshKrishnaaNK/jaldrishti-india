@@ -2,12 +2,17 @@ import { useMemo, useState } from 'react'
 import { Header } from '../components/Header'
 import { AreaSection } from '../features/area/AreaSection'
 import { ExplorePanel } from '../features/explore/ExplorePanel'
+import { HydrologySection } from '../features/hydrology/HydrologySection'
 import { SearchBox } from '../features/search/SearchBox'
 import { TerrainSection } from '../features/terrain/TerrainSection'
+import { useAnalysisImage } from '../hooks/useAnalysisImage'
+import { useHydrology } from '../hooks/useHydrology'
 import { useTerrain } from '../hooks/useTerrain'
 import { elevationAt } from '../lib/dem/grid'
 import { squareAround, validateSelection, type Bbox } from '../lib/geo/bbox'
 import { isRegion, type Place } from '../lib/geocode/types'
+import type { AnalysisLayerId } from '../lib/hydrology/layers'
+import { depressionMarkers, flowDirectionLines } from '../map/analysisFeatures'
 import { MapView, type FlyRequest } from '../map/MapView'
 import type { BasemapStatus, PointerPosition } from '../types/map'
 
@@ -19,11 +24,31 @@ export function App() {
   const [selection, setSelection] = useState<Bbox | null>(null)
   const [drawing, setDrawing] = useState(false)
   const [flyRequest, setFlyRequest] = useState<FlyRequest | null>(null)
+  const [layer, setLayer] = useState<AnalysisLayerId>('elevation')
   const terrain = useTerrain()
+
+  const terrainState = terrain.state
+  const demGrid = terrainState.status === 'ready' ? terrainState.grid : null
+  const hydrology = useHydrology(demGrid)
+  const hydro = hydrology.state
+  const analysisImage = useAnalysisImage(hydro, layer)
 
   const problem = useMemo(() => (selection ? validateSelection(selection) : null), [selection])
 
-  // Terrain always belongs to the current selection; a new selection discards it.
+  const flowLines = useMemo(
+    () => (hydro.status === 'ready' && layer === 'direction' ? flowDirectionLines(hydro.grid, hydro.result.directions) : null),
+    [hydro, layer],
+  )
+  const depressionPoints = useMemo(
+    () =>
+      hydro.status === 'ready' && (layer === 'storage' || layer === 'fillDepth')
+        ? depressionMarkers(hydro.grid, hydro.result.depressions)
+        : null,
+    [hydro, layer],
+  )
+
+  // Terrain always belongs to the current selection; a new selection discards it,
+  // which also cancels any analysis running on it.
   const select = (bbox: Bbox | null) => {
     terrain.clear()
     setSelection(bbox)
@@ -35,9 +60,19 @@ export function App() {
     select(isRegion(place) ? null : squareAround(place.lng, place.lat))
   }
 
-  const terrainState = terrain.state
   const pointerElevation =
     terrainState.status === 'ready' && pointer ? elevationAt(terrainState.grid, pointer.lng, pointer.lat) : null
+
+  const showAnalysis = hydro.status === 'ready' && layer !== 'elevation'
+  const mapImage = showAnalysis
+    ? layer === 'direction'
+      ? terrainState.status === 'ready'
+        ? terrainState.image
+        : null
+      : analysisImage
+    : terrainState.status === 'ready'
+      ? terrainState.image
+      : null
 
   return (
     <div className="app">
@@ -63,12 +98,24 @@ export function App() {
           onLoadTerrain={() => selection && !problem && terrain.load('copernicus-glo30', selection)}
         />
         <TerrainSection terrain={terrainState} onRetry={(source) => selection && terrain.load(source, selection)} />
+        <HydrologySection
+          state={hydro}
+          terrainLoaded={terrainState.status === 'ready'}
+          layer={layer}
+          onLayerChange={setLayer}
+          thresholdM2={hydrology.thresholdM2}
+          onThresholdChange={hydrology.setThreshold}
+          pointer={pointer}
+          onRetry={hydrology.retry}
+        />
       </ExplorePanel>
 
       <main className="app-map" aria-label="Map of India">
         <MapView
           selection={selection}
-          terrainImage={terrainState.status === 'ready' ? terrainState.image : null}
+          terrainImage={mapImage}
+          flowLines={flowLines}
+          depressionPoints={depressionPoints}
           drawing={drawing}
           flyRequest={flyRequest}
           onSelectionDrawn={(bbox) => {

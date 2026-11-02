@@ -20,10 +20,10 @@ const BASEMAP_LABEL: Record<BasemapStatus['state'], string> = {
   error: 'Unavailable',
 }
 
-const AVAILABLE = ['Place search', 'Area selection', 'Elevation (Copernicus GLO-30)']
+const AVAILABLE = ['Place search', 'Area selection', 'Elevation (Copernicus GLO-30)', 'Terrain flow analysis']
 
 // Capabilities planned for PaaniPulse that this build does not provide yet.
-const PLANNED = ['Runoff analysis', 'Rainfall scenarios', 'Documented incidents']
+const PLANNED = ['Rainfall scenarios', 'Documented incidents']
 
 export function ExplorePanel({ basemap, pointer, zoom, pointerElevation, terrainLoaded, children }: ExplorePanelProps) {
   let elevation = '—'

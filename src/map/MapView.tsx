@@ -8,6 +8,7 @@ import {
   type MapTouchEvent,
 } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
+import type { FeatureCollection } from 'geojson'
 import { useEffect, useRef, useState } from 'react'
 import { bboxFromCorners, squareAround, type Bbox } from '../lib/geo/bbox'
 import { isRegion, type Place } from '../lib/geocode/types'
@@ -36,6 +37,8 @@ export interface FlyRequest {
 interface MapViewProps {
   selection: Bbox | null
   terrainImage: { url: string; bounds: Bbox } | null
+  flowLines: FeatureCollection | null
+  depressionPoints: FeatureCollection | null
   drawing: boolean
   flyRequest: FlyRequest | null
   onSelectionDrawn: (bbox: Bbox) => void
@@ -47,7 +50,7 @@ interface MapViewProps {
 }
 
 export function MapView(props: MapViewProps) {
-  const { selection, terrainImage, drawing, flyRequest, onStatusChange } = props
+  const { selection, terrainImage, flowLines, depressionPoints, drawing, flyRequest, onStatusChange } = props
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [status, setStatus] = useState<BasemapStatus>({ state: 'loading' })
@@ -157,6 +160,19 @@ export function MapView(props: MapViewProps) {
     if (!ready || !map) return
     setTerrainImage(map, terrainImage)
   }, [ready, terrainImage])
+
+  // Analysis overlays.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    map.getSource<GeoJSONSource>(SOURCES.flow)?.setData(flowLines ?? EMPTY_FEATURES)
+  }, [ready, flowLines])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    map.getSource<GeoJSONSource>(SOURCES.depressions)?.setData(depressionPoints ?? EMPTY_FEATURES)
+  }, [ready, depressionPoints])
 
   // Fly to a chosen place.
   useEffect(() => {

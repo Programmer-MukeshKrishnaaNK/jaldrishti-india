@@ -6,6 +6,8 @@ export const SOURCES = {
   selection: 'pp-selection',
   draft: 'pp-draft',
   terrain: 'pp-terrain',
+  flow: 'pp-flow',
+  depressions: 'pp-depressions',
 } as const
 
 export const LAYERS = {
@@ -13,6 +15,9 @@ export const LAYERS = {
   selectionHalo: 'pp-selection-halo',
   selectionLine: 'pp-selection-line',
   draftLine: 'pp-draft-line',
+  flow: 'pp-flow-line',
+  depressionDot: 'pp-depression-dot',
+  depressionRank: 'pp-depression-rank',
 } as const
 
 const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] }
@@ -68,6 +73,45 @@ export function addOverlayLayers(map: MapLibreMap): void {
 
   map.addSource(SOURCES.selection, { type: 'geojson', data: EMPTY })
   map.addSource(SOURCES.draft, { type: 'geojson', data: EMPTY })
+  // lineMetrics enables the gradient that shows which way each flow line points.
+  map.addSource(SOURCES.flow, { type: 'geojson', data: EMPTY, lineMetrics: true })
+  map.addSource(SOURCES.depressions, { type: 'geojson', data: EMPTY })
+
+  map.addLayer({
+    id: LAYERS.flow,
+    type: 'line',
+    source: SOURCES.flow,
+    minzoom: 13,
+    layout: { 'line-cap': 'round' },
+    paint: {
+      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.8, 16, 2],
+      'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, 'rgba(21, 32, 43, 0.05)', 1, 'rgba(21, 32, 43, 0.95)'],
+    },
+  })
+  map.addLayer({
+    id: LAYERS.depressionDot,
+    type: 'circle',
+    source: SOURCES.depressions,
+    paint: {
+      'circle-radius': 9,
+      'circle-color': silt,
+      'circle-stroke-color': ink,
+      'circle-stroke-width': 1.5,
+    },
+  })
+  map.addLayer({
+    id: LAYERS.depressionRank,
+    type: 'symbol',
+    source: SOURCES.depressions,
+    layout: {
+      'text-field': ['to-string', ['get', 'rank']],
+      'text-font': ['Noto Sans Bold'],
+      'text-size': 11,
+      'text-allow-overlap': true,
+      'icon-allow-overlap': true,
+    },
+    paint: { 'text-color': ink },
+  })
 
   map.addLayer({
     id: LAYERS.selectionHalo,

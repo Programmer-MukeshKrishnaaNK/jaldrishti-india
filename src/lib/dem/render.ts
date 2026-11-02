@@ -48,7 +48,7 @@ function rampAt(t: number): [number, number, number] {
 }
 
 /** Horn-method hillshade in [0, 1]. Edge cells reuse their nearest valid neighbour. */
-function hillshade(grid: ElevationGrid): Float32Array {
+export function hillshade(grid: ElevationGrid): Float32Array {
   const { width, height, values } = grid
   const { dx, dy } = cellSizeM(grid)
   const zenith = ((90 - SUN_ALTITUDE_DEG) * Math.PI) / 180
