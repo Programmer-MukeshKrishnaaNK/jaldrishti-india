@@ -1,0 +1,84 @@
+.map-view {
+  position: absolute;
+  inset: 0;
+  background: #e6e1d6;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.map-notice {
+  position: absolute;
+  top: var(--s3);
+  left: var(--s3);
+  margin: 0;
+  padding: var(--s1) var(--s3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.map-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: min(360px, calc(100% - 2 * var(--s4)));
+  padding: var(--s4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+}
+
+.map-error h2 {
+  margin: 0 0 var(--s2);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.map-error p {
+  margin: 0 0 var(--s2);
+  font-size: var(--text-sm);
+}
+
+.map-error-note {
+  color: var(--ink-2);
+}
+
+.map-error button {
+  margin-top: var(--s2);
+  padding: var(--s1) var(--s3);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--surface);
+  background: var(--ink);
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+/* MapLibre controls, brought in line with the palette. */
+.maplibregl-ctrl-group {
+  border-radius: var(--radius);
+  box-shadow: none !important;
+  border: 1px solid var(--line);
+}
+
+.maplibregl-ctrl-scale {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: rgb(247 244 238 / 0.85);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.maplibregl-ctrl-attrib {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+}

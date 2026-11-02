@@ -1,0 +1,28 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: 0 var(--s4);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.header-title {
+  margin: 0;
+  font-size: inherit;
+  display: flex;
+}
+
+.header-tagline {
+  margin: 0;
+  padding-left: var(--s4);
+  border-left: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 479px) {
+  .header-tagline {
+    display: none;
+  }
+}

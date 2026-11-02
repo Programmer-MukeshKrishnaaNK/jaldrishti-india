@@ -1,0 +1,44 @@
+:root {
+  /* Brand palette */
+  --silt: #f1ede4;
+  --monsoon-ink: #15202b;
+  --paani: #1f6fb5;
+  --kanmoi: #2e7d78;
+  --laterite: #b4532a;
+  --haldi: #b8860b;
+  --slate: #5b636b;
+  --rule: #d8d2c6;
+
+  /* Semantic roles */
+  --bg: var(--silt);
+  --surface: #f7f4ee;
+  --ink: var(--monsoon-ink);
+  --ink-2: var(--slate);
+  --line: var(--rule);
+  --focus: var(--paani);
+  --simulated: var(--paani);
+  --waterway: var(--kanmoi);
+  --documented: var(--laterite);
+  --warning: var(--haldi);
+
+  /* Type */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+
+  /* Space (4px grid) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  --panel-width: 360px;
+  --header-height: 56px;
+  --radius: 4px;
+}

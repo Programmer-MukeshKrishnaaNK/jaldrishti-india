@@ -1,0 +1,107 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* App frame: header across the top, panel left, map filling the rest. */
+.app {
+  display: grid;
+  grid-template-rows: var(--header-height) 1fr;
+  grid-template-columns: var(--panel-width) 1fr;
+  grid-template-areas:
+    'header header'
+    'panel map';
+  height: 100%;
+}
+
+.app-header {
+  grid-area: header;
+}
+
+.app-panel {
+  grid-area: panel;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+.app-map {
+  grid-area: map;
+  position: relative;
+  min-height: 0;
+}
+
+@media (max-width: 767px) {
+  .app {
+    grid-template-rows: var(--header-height) minmax(55vh, 1fr) auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'header'
+      'map'
+      'panel';
+    height: auto;
+    min-height: 100%;
+  }
+
+  .app-panel {
+    border-right: 0;
+    border-top: 1px solid var(--line);
+    overflow: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
