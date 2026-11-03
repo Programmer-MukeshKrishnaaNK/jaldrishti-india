@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { searchGazetteer } from '../../lib/geocode/gazetteer'
+import { mergePlaces } from '../../lib/geocode/merge'
 import { searchNominatim } from '../../lib/geocode/nominatim'
 import { searchPhoton } from '../../lib/geocode/photon'
 import { GeocodeError, type Place } from '../../lib/geocode/types'
@@ -23,11 +24,6 @@ const SOURCE_LABEL: Record<Place['source'], string> = {
   nominatim: 'Nominatim',
 }
 
-function merge(primary: Place[], secondary: Place[], limit = 8): Place[] {
-  const key = (p: Place) => `${p.name.toLowerCase()}:${p.lat.toFixed(2)}:${p.lng.toFixed(2)}`
-  const seen = new Set(primary.map(key))
-  return [...primary, ...secondary.filter((p) => !seen.has(key(p)))].slice(0, limit)
-}
 
 export function SearchBox({ onSelect }: SearchBoxProps) {
   const [text, setText] = useState('')
@@ -59,7 +55,7 @@ export function SearchBox({ onSelect }: SearchBoxProps) {
         try {
           const remote = await searchPhoton(query, abort.signal)
           if (id !== request.current) return
-          setOptions(merge(local, remote))
+          setOptions(mergePlaces(local, remote))
           setStatus({ kind: 'idle' })
         } catch (error) {
           if (abort.signal.aborted || id !== request.current) return
@@ -109,7 +105,7 @@ export function SearchBox({ onSelect }: SearchBoxProps) {
         return
       }
       choose(results[0])
-      setOptions(results)
+      setOptions(mergePlaces(results, []))
     } catch (error) {
       if (abort.signal.aborted || id !== request.current) return
       setStatus({
