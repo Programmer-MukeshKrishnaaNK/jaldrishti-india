@@ -16,6 +16,17 @@
   color: var(--ink-2);
 }
 
+/* Workflow step number on the four sections a user works through in order. */
+.panel-step {
+  display: inline-block;
+  min-width: 2.5ch;
+  margin-right: var(--s2);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--simulated-text);
+}
+
 .panel-text {
   margin: 0;
   font-size: var(--text-sm);
@@ -69,7 +80,7 @@
 }
 
 .status-ready {
-  color: var(--waterway);
+  color: var(--waterway-text);
 }
 
 .status-loading,
@@ -78,7 +89,7 @@
 }
 
 .status-error {
-  color: var(--documented);
+  color: var(--documented-text);
 }
 
 /* Shared panel controls */
@@ -136,6 +147,14 @@
 
 .button-primary:hover:not(:disabled) {
   background: #24323f;
+}
+
+/* A disabled primary action reads as waiting, not as a dark block. */
+.button-primary:disabled {
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px dashed var(--ink-2);
+  opacity: 1;
 }
 
 .panel-alert {

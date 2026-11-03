@@ -68,7 +68,7 @@ export function ExplorePanel({ basemap, pointer, zoom, pointerElevation, terrain
       </section>
 
       <section className="panel-section">
-        <h2 className="panel-heading">Build status</h2>
+        <h2 className="panel-heading">Data and coverage</h2>
         <ul className="status-list">
           <li>
             <span>Basemap</span>

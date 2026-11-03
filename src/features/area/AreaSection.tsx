@@ -19,6 +19,7 @@ export function AreaSection(props: AreaSectionProps) {
   return (
     <section className="panel-section" aria-labelledby="area-heading">
       <h2 id="area-heading" className="panel-heading">
+        <span className="panel-step" aria-hidden="true">01</span>
         Analysis area
       </h2>
 

@@ -18,10 +18,11 @@ import { INCIDENT_POINTS } from '../lib/evidence/incidents'
 import { squareAround, validateSelection, type Bbox } from '../lib/geo/bbox'
 import { isRegion, type Place } from '../lib/geocode/types'
 import type { Hotspot } from '../lib/hydrology/hotspots'
-import { SCENARIO_LAYERS, type AnalysisLayerId } from '../lib/hydrology/layers'
+import { analysisLayer, SCENARIO_LAYERS, type AnalysisLayerId } from '../lib/hydrology/layers'
 import { coefficientGrid, uniformCoefficientGrid } from '../lib/hydrology/runoff'
 import { defaultCoefficients } from '../lib/landcover/classes'
 import { depressionMarkers, flowDirectionLines, gridToLngLat, hotspotMarkers, incidentMarkers } from '../map/analysisFeatures'
+import { MapLegend } from '../map/MapLegend'
 import { MapView, type FlyRequest } from '../map/MapView'
 import type { BasemapStatus, PointerPosition } from '../types/map'
 
@@ -207,6 +208,14 @@ export function App() {
           <Suspense fallback={<p className="map-notice">Loading 3D view…</p>}>
             <Terrain3DView grid={demGrid} scenario={scenario} />
           </Suspense>
+        )}
+        {view === '2d' && (
+          <MapLegend
+            layer={terrainState.status === 'ready' ? analysisLayer(hydro.status === 'ready' ? activeLayer : 'elevation') : null}
+            elevation={terrainState.status === 'ready' ? terrainState.render : null}
+            hotspots={hotspotPoints !== null}
+            reports={showReports}
+          />
         )}
         <MapView
           selection={selection}

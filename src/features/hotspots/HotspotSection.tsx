@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ScenarioState } from '../../hooks/useHydrology'
 import type { ElevationGrid } from '../../lib/dem/types'
 import { nearestPoint, reportFor } from '../../lib/evidence/incidents'
@@ -26,6 +27,7 @@ export function HotspotSection({ scenario, grid, selectedRank, onSelect }: Hotsp
     return (
       <section className="panel-section" aria-labelledby="hotspot-heading">
         <h2 id="hotspot-heading" className="panel-heading">
+          <span className="panel-step" aria-hidden="true">04</span>
           Hotspots
         </h2>
         <p className="panel-text">Run a rainfall scenario to screen for places where the model concentrates water.</p>
@@ -40,6 +42,7 @@ export function HotspotSection({ scenario, grid, selectedRank, onSelect }: Hotsp
   return (
     <section className="panel-section" aria-labelledby="hotspot-heading">
       <h2 id="hotspot-heading" className="panel-heading">
+        <span className="panel-step" aria-hidden="true">04</span>
         Hotspots, {rainfallMm} mm <span className="badge badge-scenario">Relative screening</span>
       </h2>
       {hotspots.length === 0 ? (
@@ -105,8 +108,15 @@ function WhyHere({
   const report = nearest && reportFor(nearest.point.reportId)
   const depression = hotspot.depressionRanks.map((r) => fills[r - 1]).find(Boolean)
 
+  // Bring the explanation into view when a hotspot is chosen, without jumping if it is already visible.
+  const article = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    article.current?.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
+  }, [hotspot.rank])
+
   return (
-    <article className="why-here" aria-labelledby="why-heading">
+    <article ref={article} className="why-here" aria-labelledby="why-heading">
       <header>
         <h3 id="why-heading">Why here? Hotspot {hotspot.rank}</h3>
         <button type="button" className="button button-quiet" onClick={onClose}>

@@ -25,6 +25,7 @@ export function TerrainSection({ terrain, onRetry }: TerrainSectionProps) {
   return (
     <section className="panel-section" aria-labelledby="terrain-heading" aria-busy={terrain.status === 'loading'}>
       <h2 id="terrain-heading" className="panel-heading">
+        <span className="panel-step" aria-hidden="true">02</span>
         Terrain
       </h2>
 

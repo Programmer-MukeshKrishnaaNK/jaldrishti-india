@@ -41,6 +41,7 @@ export function ScenarioSection(props: ScenarioSectionProps) {
   return (
     <section className="panel-section" aria-labelledby="scenario-heading" aria-busy={scenario.status === 'running'}>
       <h2 id="scenario-heading" className="panel-heading">
+        <span className="panel-step" aria-hidden="true">03</span>
         Rainfall scenario
       </h2>
 

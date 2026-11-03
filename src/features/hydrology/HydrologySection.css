@@ -46,7 +46,7 @@
 }
 
 .badge-parameter {
-  color: var(--warning);
+  color: var(--warning-text);
   border: 1px solid var(--warning);
 }
 
@@ -165,11 +165,11 @@
 }
 
 .badge-scenario {
-  color: var(--simulated);
+  color: var(--simulated-text);
   border: 1px solid var(--simulated);
 }
 
 .badge-documented {
-  color: var(--documented);
+  color: var(--documented-text);
   border: 1px solid var(--documented);
 }

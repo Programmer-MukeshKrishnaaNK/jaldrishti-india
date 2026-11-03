@@ -21,6 +21,12 @@
   --documented: var(--laterite);
   --warning: var(--haldi);
 
+  /* Darker shades of the accents for small text, each at least 4.5:1 on silt and surface. */
+  --simulated-text: #1a5f9c;
+  --waterway-text: #246661;
+  --documented-text: #9c4522;
+  --warning-text: #7f5d07;
+
   /* Type */
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;

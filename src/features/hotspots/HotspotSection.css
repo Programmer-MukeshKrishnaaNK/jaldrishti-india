@@ -60,7 +60,7 @@
 .hotspot-flag {
   grid-column: 2 / -1;
   font-size: var(--text-xs);
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .why-here {
@@ -112,7 +112,7 @@
 }
 
 .why-cautions li::marker {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .why-here h4 {
