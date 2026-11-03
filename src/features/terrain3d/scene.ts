@@ -176,14 +176,25 @@ export class TerrainScene {
 
     this.controls.minDistance = size * 0.15
     this.controls.maxDistance = size * 3
-    if (!keepCamera) {
-      // Angled view from the south-south-east, looking north across the area.
-      this.camera.position.set(size * 0.35, relief + size * 0.6, size * 0.95)
-      this.controls.target.set(0, relief * 0.3, 0)
-    }
-    this.controls.update()
+    if (keepCamera) this.controls.update()
+    else this.frameCamera(size, relief)
     this.respawnAllDrops()
     return built.frame
+  }
+
+  /**
+   * Places the camera at the home view. With damping on, OrbitControls keeps the
+   * rotation, pan and zoom still owed from the last drag and applies part of it on every
+   * update; that is flushed first so the view lands in the same place every time.
+   */
+  private frameCamera(size: number, relief: number): void {
+    this.controls.enableDamping = false
+    this.controls.update()
+    // Angled view from the south-south-east, looking north across the area.
+    this.camera.position.set(size * 0.35, relief + size * 0.6, size * 0.95)
+    this.controls.target.set(0, relief * 0.3, 0)
+    this.controls.update()
+    this.controls.enableDamping = true
   }
 
   /** Draws modelled ponding, or removes water when `pondDepthM` is null. */
@@ -251,8 +262,11 @@ export class TerrainScene {
     this.hideSplashes()
   }
 
+  /** Returns to the home view of the current terrain without rebuilding it. */
   resetView(): void {
-    if (this.grid && this.frame) this.setTerrain(this.grid, this.frame.exaggeration)
+    if (!this.frame) return
+    const { extentX, extentZ, maxElevation, minElevation, exaggeration } = this.frame
+    this.frameCamera(Math.max(extentX, extentZ), (maxElevation - minElevation) * exaggeration)
   }
 
   dispose(): void {
