@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react'
 import { bboxFromCorners, squareAround, type Bbox } from '../lib/geo/bbox'
 import { isRegion, type Place } from '../lib/geocode/types'
 import type { BasemapStatus, PointerPosition } from '../types/map'
+import { quietMissingComparisons } from './basemapStyle'
 import { BASEMAP, INDIA_VIEW, STYLE_TIMEOUT_MS } from './config'
 import { addOverlayLayers, bboxFeature, EMPTY_FEATURES, setTerrainImage, SOURCES } from './layers'
 import './MapView.css'
@@ -82,6 +83,7 @@ export function MapView(props: MapViewProps) {
       map = new MapLibreMap({
         container,
         style: BASEMAP.styleUrl,
+        transformStyle: (_previous, next) => quietMissingComparisons(next),
         bounds: INDIA_VIEW.bounds,
         fitBoundsOptions: { padding: 24 },
         attributionControl: { compact: true },
