@@ -1,0 +1,188 @@
+.g3d {
+  display: grid;
+  grid-template-rows: var(--header-height) 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+}
+
+.g3d-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: 0 var(--s4);
+  border-bottom: 1px solid var(--line);
+}
+
+.g3d-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.g3d-stage {
+  position: relative;
+  min-height: 0;
+  background: #1b232b;
+}
+
+.g3d-container,
+.g3d-map {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.g3d-rain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.g3d-notice {
+  position: absolute;
+  top: var(--s4);
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  padding: var(--s1) var(--s3);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.g3d-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: min(420px, calc(100% - 2 * var(--s4)));
+  padding: var(--s4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+}
+
+.g3d-error h2 {
+  margin: 0 0 var(--s2);
+  font-size: var(--text-md);
+}
+
+.g3d-error p {
+  margin: 0 0 var(--s2);
+}
+
+/* Top-left keeps Google's logo and attribution (bottom) uncovered. */
+.g3d-panel {
+  position: absolute;
+  top: var(--s3);
+  left: var(--s3);
+  width: min(340px, calc(100% - 2 * var(--s3)));
+  padding: var(--s3);
+  background: rgb(247 244 238 / 0.95);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+}
+
+.g3d-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.g3d-row input[type='range'] {
+  flex: 1;
+  min-width: 80px;
+  accent-color: var(--simulated);
+}
+
+.g3d-chip {
+  min-height: 30px;
+  padding: 0 var(--s3);
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.g3d-chip[aria-checked='true'] {
+  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.g3d-figures {
+  margin: var(--s2) 0;
+  font-size: var(--text-xs);
+}
+
+.g3d-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s3);
+  margin: 0 0 var(--s2);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+}
+
+.g3d-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.g3d-legend span {
+  width: 14px;
+  height: 10px;
+  border: 1px solid rgb(21 32 43 / 0.25);
+}
+
+.g3d .button-rain {
+  color: #fff;
+  background: var(--simulated);
+  border-color: var(--simulated);
+}
+
+@media (max-width: 767px) {
+  .g3d-header {
+    gap: var(--s2);
+    padding: 0 var(--s3);
+  }
+
+  .g3d-title {
+    font-size: var(--text-xs);
+  }
+
+  .g3d-title .badge {
+    display: none;
+  }
+
+  .g3d-panel {
+    top: auto;
+    bottom: 72px;
+    left: var(--s2);
+    right: var(--s2);
+    width: auto;
+    padding: var(--s2);
+  }
+
+  .g3d-panel > .panel-note:last-child {
+    font-size: 0.6875rem;
+  }
+}
