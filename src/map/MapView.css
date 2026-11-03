@@ -99,3 +99,34 @@
   font-family: var(--font-sans);
   font-size: var(--text-xs);
 }
+
+/* 2D / 3D switch, above both views, beside the zoom buttons. */
+.view-switch {
+  position: absolute;
+  z-index: 5;
+  top: 10px;
+  right: 52px;
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.view-switch button {
+  min-width: 44px;
+  min-height: 30px;
+  padding: 0 var(--s3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.view-switch button[aria-checked='true'] {
+  color: var(--surface);
+  background: var(--ink);
+}

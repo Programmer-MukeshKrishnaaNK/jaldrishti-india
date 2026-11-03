@@ -23,6 +23,7 @@ Working now:
 - Hypothetical rainfall scenarios (50, 100, 150 mm or a custom total): runoff from ESA WorldCover land cover and editable coefficients, fill-and-spill through terrain depressions with a full volume balance, and a comparison across scenarios.
 - Hotspot screening with relative categories, ranked hotspots and a "Why here?" explanation generated from each hotspot's values.
 - Documented waterlogging reports for Madurai from dated news articles, shown as context.
+- A 3D view of the loaded terrain (Three.js): real Copernicus elevations with a stated vertical exaggeration, the scenario's modelled ponding drawn cell by cell at its modelled water level, and an illustrative rain animation.
 - A method and limitations dialog in the app; the full write-up is in [docs/methodology.md](docs/methodology.md).
 
 PaaniPulse is a screening prototype, not a flood forecast or warning system.
@@ -45,6 +46,12 @@ A 25 km² area (about 27,000 cells) takes roughly 40 ms in testing; a 3 × 3 km 
 - GLO-30 is a surface model at about 30 m. Buildings, walls, bridges and embankments are part of the heights, so they can dam modelled flow and create hollows that do not exist on the ground. In central Madurai, for example, the second-largest depression lies on the Meenakshi Amman Temple complex, enclosed by its walls and towers in the data, and the third lies on the Vaigai river, whose surface is flattened in the data.
 - Storm drains, culverts, kerbs and channels narrower than a cell are not represented.
 - Only area inside the selection contributes to accumulation and HAND.
+
+## 3D view
+
+The 2D / 3D switch over the map opens a Three.js view of the same area; Three.js is downloaded only the first time. Nothing is recomputed or downloaded again: the terrain mesh is built from the loaded `ElevationGrid` (one vertex per cell at its real spacing, east = +x, north = −z, no-data cells left as holes), and the water from the active scenario's `pondDepthM`, one flat quad per ponded cell at ground + ponding depth. Heights are exaggerated 3× by default (1×, 2×, 3× or 5×), as the view states.
+
+The rain is a visualisation of the chosen hypothetical total; its speed, density and the few seconds the water takes to rise to its modelled level are illustrative and do not represent rainfall rate or storm duration. The animation only moves particles and the displayed water height; the model's arrays are never modified. If WebGL is unavailable the view says so and the 2D map keeps working.
 
 ## Rainfall scenarios and hotspots
 

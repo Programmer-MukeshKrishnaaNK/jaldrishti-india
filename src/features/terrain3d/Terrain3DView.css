@@ -1,0 +1,262 @@
+.view3d {
+  position: absolute;
+  inset: 0;
+  /* Above MapLibre's own controls, below the view switch. */
+  z-index: 4;
+  background: var(--bg);
+}
+
+.view3d-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.view3d-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.view3d-message,
+.view3d-empty {
+  display: grid;
+  place-items: center;
+  padding: var(--s5);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.view3d-empty {
+  position: absolute;
+  inset: 0;
+}
+
+.view3d-panel {
+  position: absolute;
+  padding: var(--s2) var(--s3);
+  font-size: var(--text-xs);
+  background: rgb(247 244 238 / 0.94);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.view3d-top {
+  top: var(--s3);
+  left: var(--s3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  max-width: calc(100% - 2 * var(--s3) - 120px);
+}
+
+.view3d-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.view3d-title .mono {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.view3d-field {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--ink-2);
+}
+
+.view3d-field select {
+  padding: 1px var(--s1);
+  font-size: var(--text-xs);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.view3d-field input {
+  flex: 1;
+  accent-color: var(--simulated);
+}
+
+.view3d-compass {
+  position: absolute;
+  top: 52px;
+  right: var(--s3);
+  display: grid;
+  place-items: start center;
+  width: 40px;
+  height: 40px;
+  padding-top: 3px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  background: rgb(247 244 238 / 0.94);
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+}
+
+.view3d-compass::after {
+  content: '';
+  position: absolute;
+  top: 17px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  translate: -50% 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 14px solid var(--ink);
+}
+
+.view3d-legend {
+  left: var(--s3);
+  bottom: var(--s3);
+  width: min(300px, calc(100% - 2 * var(--s3)));
+}
+
+.view3d-legend .legend-title {
+  margin: 0 0 var(--s1);
+}
+
+.view3d-water {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s2);
+  margin: var(--s2) 0 0;
+}
+
+.swatch-water {
+  background: linear-gradient(to right, #6fa3d4, #123f69);
+}
+
+.view3d-readout {
+  margin: var(--s2) 0 0;
+  color: var(--ink);
+}
+
+.view3d-rain {
+  right: var(--s3);
+  bottom: var(--s3);
+  width: min(260px, calc(100% - 2 * var(--s3)));
+}
+
+.view3d-rain .button-row {
+  margin-top: 0;
+}
+
+.view3d-rain .view3d-field {
+  margin-top: var(--s2);
+}
+
+.button-rain {
+  color: #fff;
+  background: var(--simulated);
+  border-color: var(--simulated);
+}
+
+.view3d-dock {
+  display: contents;
+}
+
+.view3d-narrow {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .view3d-top {
+    top: var(--s2);
+    left: var(--s2);
+    right: 104px;
+    flex-wrap: nowrap;
+    max-width: none;
+    padding: var(--s1) var(--s2);
+  }
+
+  .view3d-title .mono,
+  .view3d-wide,
+  .view3d-reset {
+    display: none;
+  }
+
+  .view3d-narrow {
+    display: inline;
+  }
+
+  .view3d-compass {
+    top: 56px;
+    right: var(--s2);
+    width: 34px;
+    height: 34px;
+  }
+
+  .view3d-compass::after {
+    top: 14px;
+    border-bottom-width: 11px;
+  }
+
+  /* Legend and rain controls share one compact dock at the bottom. */
+  .view3d-dock {
+    position: absolute;
+    left: var(--s2);
+    right: var(--s2);
+    bottom: var(--s2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+  }
+
+  .view3d-dock .view3d-panel {
+    position: static;
+    width: auto;
+    padding: var(--s1) var(--s2);
+  }
+
+  .view3d-legend .view3d-water-note,
+  .view3d-readout {
+    display: none;
+  }
+
+  .view3d-water {
+    margin-top: var(--s1);
+  }
+
+  .view3d-rain {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--s3);
+  }
+
+  .view3d-rain .button-row {
+    flex-wrap: nowrap;
+    gap: var(--s1);
+  }
+
+  .view3d-rain .button {
+    min-height: 28px;
+    white-space: nowrap;
+  }
+
+  .view3d-rain .view3d-field {
+    min-width: 0;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+
+  .view3d-rain .view3d-field input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .view3d-rain .panel-note {
+    grid-column: 1 / -1;
+    margin-top: var(--s1);
+    font-size: 0.6875rem;
+  }
+}

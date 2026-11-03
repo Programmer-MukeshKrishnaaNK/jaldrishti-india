@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Header } from '../components/Header'
 import { AreaSection } from '../features/area/AreaSection'
 import { EvidenceSection } from '../features/evidence/EvidenceSection'
@@ -27,6 +27,9 @@ import type { BasemapStatus, PointerPosition } from '../types/map'
 
 const HOTSPOT_ZOOM = 15.5
 
+// Three.js is only downloaded the first time the 3D view is opened.
+const Terrain3DView = lazy(() => import('../features/terrain3d/Terrain3DView'))
+
 export function App() {
   const [basemap, setBasemap] = useState<BasemapStatus>({ state: 'loading' })
   const [pointer, setPointer] = useState<PointerPosition | null>(null)
@@ -42,6 +45,7 @@ export function App() {
   const [selectedHotspot, setSelectedHotspot] = useState<number | null>(null)
   const [showReports, setShowReports] = useState(true)
   const [methodOpen, setMethodOpen] = useState(false)
+  const [view, setView] = useState<'2d' | '3d'>('2d')
   const terrain = useTerrain()
 
   const terrainState = terrain.state
@@ -183,6 +187,27 @@ export function App() {
       </ExplorePanel>
 
       <main className="app-map" aria-label="Map of India">
+        <div className="view-switch" role="radiogroup" aria-label="Map view">
+          {(['2d', '3d'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={view === mode}
+              onClick={() => {
+                setView(mode)
+                if (mode === '3d') setDrawing(false)
+              }}
+            >
+              {mode.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        {view === '3d' && (
+          <Suspense fallback={<p className="map-notice">Loading 3D view…</p>}>
+            <Terrain3DView grid={demGrid} scenario={scenario} />
+          </Suspense>
+        )}
         <MapView
           selection={selection}
           terrainImage={mapImage}
