@@ -34,7 +34,7 @@ const rampRgb = ELEVATION_RAMP.map(([t, hex]) => [
   parseInt(hex.slice(5, 7), 16),
 ])
 
-function rampAt(t: number): [number, number, number] {
+export function rampAt(t: number): [number, number, number] {
   for (let i = 1; i < rampRgb.length; i++) {
     const [t1, r1, g1, b1] = rampRgb[i]
     if (t <= t1) {
