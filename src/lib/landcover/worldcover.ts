@@ -1,8 +1,10 @@
 import { fromUrl } from 'geotiff'
+import { READ_TIMEOUT_MS } from '../dem/copernicus'
 import { cellAt } from '../dem/grid'
 import { DemError, isAbort, throwIfAborted } from '../dem/errors'
 import { searchItems, signHref } from '../dem/planetaryComputer'
 import type { ElevationGrid } from '../dem/types'
+import { underDeadline } from '../net/deadline'
 import { classIndex, WORLDCOVER_CLASSES } from './classes'
 
 export const WORLDCOVER_SOURCE = {
@@ -47,37 +49,54 @@ export async function loadLandCover(grid: ElevationGrid, signal?: AbortSignal): 
       const href = item.assets.map?.href
       if (!href) return
       for (let attempt = 0; attempt < 2; attempt++) {
+        let timedOut = false
         try {
           const signed = await signHref(href, signal, attempt > 0)
-          const tiff = await fromUrl(signed, { blockSize: 65536 } as Parameters<typeof fromUrl>[1], signal)
-          const image = await tiff.getImage()
-          // WorldCover tiles are pixel-is-area GeoTIFFs, so the bounding box is exact.
-          const [minX, , , maxY] = image.getBoundingBox()
-          const [rx, ry] = image.getResolution()
-          const x0 = Math.max(0, Math.floor((west - minX) / rx))
-          const y0 = Math.max(0, Math.floor((north - maxY) / ry))
-          const x1 = Math.min(image.getWidth(), Math.ceil((east - minX) / rx))
-          const y1 = Math.min(image.getHeight(), Math.ceil((south - maxY) / ry))
-          if (x1 <= x0 || y1 <= y0) return
-          const raster = (await image.readRasters({ window: [x0, y0, x1, y1], samples: [0], interleave: true, signal })) as ArrayLike<number>
-          const w = x1 - x0
-          for (let py = 0; py < y1 - y0; py++) {
-            const lat = maxY + (y0 + py + 0.5) * ry
-            for (let px = 0; px < w; px++) {
-              const cell = cellAt(grid, minX + (x0 + px + 0.5) * rx, lat)
-              if (!cell) continue
-              const i = cell.row * grid.width + cell.col
-              const k = classIndex(raster[py * w + px])
-              if (k < 0) missing[i]++
-              else counts[k * n + i]++
+          await underDeadline(signal, READ_TIMEOUT_MS, async (deadline) => {
+            try {
+              const tiff = await fromUrl(signed, { blockSize: 65536 } as Parameters<typeof fromUrl>[1], deadline.signal)
+              const image = await tiff.getImage()
+              // WorldCover tiles are pixel-is-area GeoTIFFs, so the bounding box is exact.
+              const [minX, , , maxY] = image.getBoundingBox()
+              const [rx, ry] = image.getResolution()
+              const x0 = Math.max(0, Math.floor((west - minX) / rx))
+              const y0 = Math.max(0, Math.floor((north - maxY) / ry))
+              const x1 = Math.min(image.getWidth(), Math.ceil((east - minX) / rx))
+              const y1 = Math.min(image.getHeight(), Math.ceil((south - maxY) / ry))
+              if (x1 <= x0 || y1 <= y0) return
+              const raster = (await image.readRasters({
+                window: [x0, y0, x1, y1],
+                samples: [0],
+                interleave: true,
+                signal: deadline.signal,
+              })) as ArrayLike<number>
+              const w = x1 - x0
+              for (let py = 0; py < y1 - y0; py++) {
+                const lat = maxY + (y0 + py + 0.5) * ry
+                for (let px = 0; px < w; px++) {
+                  const cell = cellAt(grid, minX + (x0 + px + 0.5) * rx, lat)
+                  if (!cell) continue
+                  const i = cell.row * grid.width + cell.col
+                  const k = classIndex(raster[py * w + px])
+                  if (k < 0) missing[i]++
+                  else counts[k * n + i]++
+                }
+              }
+              used.push(item.id)
+            } catch (error) {
+              timedOut = deadline.expired()
+              throw error
             }
-          }
-          used.push(item.id)
+          })
           return
         } catch (error) {
-          if (isAbort(error) || signal?.aborted) throw new DemError('ABORTED', 'The request was cancelled.')
+          if (signal?.aborted) throw new DemError('ABORTED', 'The request was cancelled.')
           if (error instanceof DemError) throw error
-          if (attempt === 1) throw new DemError('NETWORK', `Could not read land cover from ${item.id}.`, { cause: error })
+          if (isAbort(error) && !timedOut) throw new DemError('ABORTED', 'The request was cancelled.')
+          if (attempt === 1) {
+            const reason = timedOut ? `did not finish within ${READ_TIMEOUT_MS / 1000} s` : 'failed'
+            throw new DemError('NETWORK', `Reading land cover from ${item.id} ${reason}. Try again.`, { cause: error })
+          }
         }
       }
     }),

@@ -1,5 +1,7 @@
 import type { Bbox } from '../geo/bbox'
+import { underDeadline } from '../net/deadline'
 import { DemError, isAbort, throwIfAborted } from './errors'
+import { JSON_TIMEOUT_MS } from './planetaryComputer'
 import type { DemProgress, DemSourceInfo, ElevationGrid } from './types'
 
 // Fallback only: SRTM-derived terrain tiles from the AWS Open Data registry.
@@ -34,17 +36,25 @@ const pxToLat = (y: number) => {
 }
 
 async function decodeTile(x: number, y: number, signal?: AbortSignal): Promise<Float32Array> {
-  let response: Response
-  try {
-    response = await fetch(`${TILE_URL}/${ZOOM}/${x}/${y}.png`, { signal })
-  } catch (error) {
-    if (isAbort(error)) throw new DemError('ABORTED', 'The request was cancelled.')
-    throw new DemError('NETWORK', 'Could not reach the Terrain Tiles service.', { cause: error })
-  }
-  if (!response.ok) throw new DemError('NETWORK', `Terrain tile ${ZOOM}/${x}/${y} answered HTTP ${response.status}.`)
+  // A tile is one PNG of a few hundred kilobytes; the same bound as a catalogue request applies.
+  const blob = await underDeadline(signal, JSON_TIMEOUT_MS, async (deadline) => {
+    try {
+      const response = await fetch(`${TILE_URL}/${ZOOM}/${x}/${y}.png`, { signal: deadline.signal })
+      if (!response.ok) throw new DemError('NETWORK', `Terrain tile ${ZOOM}/${x}/${y} answered HTTP ${response.status}.`)
+      return await response.blob()
+    } catch (error) {
+      if (error instanceof DemError) throw error
+      if (signal?.aborted) throw new DemError('ABORTED', 'The request was cancelled.')
+      if (deadline.expired()) {
+        throw new DemError('NETWORK', `Terrain tile ${ZOOM}/${x}/${y} did not arrive within ${JSON_TIMEOUT_MS / 1000} s.`, { cause: error })
+      }
+      if (isAbort(error)) throw new DemError('ABORTED', 'The request was cancelled.')
+      throw new DemError('NETWORK', 'Could not reach the Terrain Tiles service.', { cause: error })
+    }
+  })
 
   // Colour management or premultiplication would corrupt the encoded heights.
-  const bitmap = await createImageBitmap(await response.blob(), {
+  const bitmap = await createImageBitmap(blob, {
     colorSpaceConversion: 'none',
     premultiplyAlpha: 'none',
   })

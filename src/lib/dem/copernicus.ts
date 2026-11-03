@@ -1,5 +1,6 @@
 import { fromUrl } from 'geotiff'
 import type { Bbox } from '../geo/bbox'
+import { underDeadline } from '../net/deadline'
 import { DemError, isAbort, throwIfAborted } from './errors'
 import { searchItems, signHref, type StacItem } from './planetaryComputer'
 import type { DemProgress, DemSourceInfo, ElevationGrid } from './types'
@@ -19,6 +20,11 @@ export const COPERNICUS_SOURCE: DemSourceInfo = {
 // GLO-30 spacing is one arc-second in latitude everywhere and in longitude below 50° N,
 // which covers all of India.
 const ARC_SECOND = 1 / 3600
+
+// One read opens the tile header and fetches the few 64 KiB blocks covering the window,
+// normally in a few seconds. A read that has not finished by then is treated as failed,
+// and the retry below gets a fresh token.
+export const READ_TIMEOUT_MS = 45_000
 
 interface ItemGrid {
   item: StacItem
@@ -58,22 +64,32 @@ async function readWindow(
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const signed = await signHref(href, signal, attempt > 0)
+    let timedOut = false
     try {
-      // Fetch in 64 KiB blocks so only the bytes covering the window are requested.
-      // fromUrl forwards block options at runtime, but its declared type omits them.
-      const tiff = await fromUrl(signed, { blockSize: 65536 } as Parameters<typeof fromUrl>[1], signal)
-      const image = await tiff.getImage()
-      if (image.getWidth() !== grid.width || image.getHeight() !== grid.height) {
-        throw new DemError('DECODE', `${grid.item.id} does not match its catalogue dimensions.`)
-      }
-      const raster = await image.readRasters({ window, samples: [0], interleave: true, signal })
-      return Float32Array.from(raster as ArrayLike<number>)
+      return await underDeadline(signal, READ_TIMEOUT_MS, async (deadline) => {
+        try {
+          // Fetch in 64 KiB blocks so only the bytes covering the window are requested.
+          // fromUrl forwards block options at runtime, but its declared type omits them.
+          const tiff = await fromUrl(signed, { blockSize: 65536 } as Parameters<typeof fromUrl>[1], deadline.signal)
+          const image = await tiff.getImage()
+          if (image.getWidth() !== grid.width || image.getHeight() !== grid.height) {
+            throw new DemError('DECODE', `${grid.item.id} does not match its catalogue dimensions.`)
+          }
+          const raster = await image.readRasters({ window, samples: [0], interleave: true, signal: deadline.signal })
+          return Float32Array.from(raster as ArrayLike<number>)
+        } catch (error) {
+          timedOut = deadline.expired()
+          throw error
+        }
+      })
     } catch (error) {
-      if (isAbort(error) || signal?.aborted) throw new DemError('ABORTED', 'The request was cancelled.')
+      if (signal?.aborted) throw new DemError('ABORTED', 'The request was cancelled.')
       if (error instanceof DemError) throw error
+      if (isAbort(error) && !timedOut) throw new DemError('ABORTED', 'The request was cancelled.')
       // An expired or rejected token surfaces as a generic fetch error; retry once with a fresh one.
       if (attempt === 0) continue
-      throw new DemError('NETWORK', `Could not read elevation data from ${grid.item.id}.`, { cause: error })
+      const reason = timedOut ? `did not finish within ${READ_TIMEOUT_MS / 1000} s` : 'failed'
+      throw new DemError('NETWORK', `Reading elevation data from ${grid.item.id} ${reason}. Try again.`, { cause: error })
     }
   }
   throw new DemError('NETWORK', `Could not read elevation data from ${grid.item.id}.`)

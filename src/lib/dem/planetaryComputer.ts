@@ -1,10 +1,15 @@
 import type { Bbox } from '../geo/bbox'
+import { underDeadline } from '../net/deadline'
 import { DemError, isAbort } from './errors'
 
 const PC_API = 'https://planetarycomputer.microsoft.com/api'
 
 // Renew a little before the stated expiry so a long read does not cross it.
 const TOKEN_MARGIN_MS = 2 * 60 * 1000
+
+// Catalogue searches and token requests return a few kilobytes of JSON and normally
+// answer within a second or two; this bounds a request that is accepted but never answered.
+export const JSON_TIMEOUT_MS = 20_000
 
 export interface StacItem {
   id: string
@@ -17,22 +22,28 @@ export interface StacItem {
 }
 
 async function getJson<T>(url: string, signal: AbortSignal | undefined, what: string): Promise<T> {
-  let response: Response
-  try {
-    response = await fetch(url, { signal })
-  } catch (error) {
-    if (isAbort(error)) throw new DemError('ABORTED', 'The request was cancelled.')
-    throw new DemError('NETWORK', `Could not reach the Planetary Computer ${what}.`, { cause: error })
-  }
-  if (!response.ok) {
-    throw new DemError(
-      response.status === 429 ? 'NETWORK' : what === 'signing service' ? 'SIGNING' : 'NETWORK',
-      response.status === 429
-        ? `The Planetary Computer ${what} is rate-limiting requests. Try again shortly.`
-        : `The Planetary Computer ${what} answered HTTP ${response.status}.`,
-    )
-  }
-  return (await response.json()) as T
+  return underDeadline(signal, JSON_TIMEOUT_MS, async (deadline) => {
+    try {
+      const response = await fetch(url, { signal: deadline.signal })
+      if (!response.ok) {
+        throw new DemError(
+          response.status === 429 ? 'NETWORK' : what === 'signing service' ? 'SIGNING' : 'NETWORK',
+          response.status === 429
+            ? `The Planetary Computer ${what} is rate-limiting requests. Try again shortly.`
+            : `The Planetary Computer ${what} answered HTTP ${response.status}.`,
+        )
+      }
+      return (await response.json()) as T
+    } catch (error) {
+      if (error instanceof DemError) throw error
+      if (signal?.aborted) throw new DemError('ABORTED', 'The request was cancelled.')
+      if (deadline.expired()) {
+        throw new DemError('NETWORK', `The Planetary Computer ${what} did not answer within ${JSON_TIMEOUT_MS / 1000} s.`, { cause: error })
+      }
+      if (isAbort(error)) throw new DemError('ABORTED', 'The request was cancelled.')
+      throw new DemError('NETWORK', `Could not reach the Planetary Computer ${what}.`, { cause: error })
+    }
+  })
 }
 
 /** Items of a STAC collection that intersect the bounding box. */
