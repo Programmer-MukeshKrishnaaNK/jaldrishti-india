@@ -132,6 +132,7 @@ export function HydrologySection(props: HydrologySectionProps) {
             {layer === 'direction' && (
               <p className="panel-note">
                 Lines appear from zoom 13. Cells at the area edge with no lower neighbour drain out of the area and have no line.
+                The colours beneath are elevation; their legend and range are under Terrain above.
               </p>
             )}
             {layer === 'elevation' && <p className="panel-note">Legend and range are under Terrain above.</p>}

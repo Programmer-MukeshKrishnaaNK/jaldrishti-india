@@ -27,8 +27,11 @@ export function MapLegend({ layer, elevation, hotspots, reports }: MapLegendProp
         {layer && <span className={`badge badge-${layer.kind}`}>{KIND[layer.kind]}</span>}
       </summary>
       <div className="map-legend-body">
-        {layer?.id === 'elevation' && elevation && (
+        {layer?.id === 'direction' && <p className="map-legend-note">Lines point downhill, darkest at the arrow end.</p>}
+        {/* Flow direction is drawn over the elevation colours, so it shows their key too. */}
+        {(layer?.id === 'elevation' || layer?.id === 'direction') && elevation && (
           <figure className="legend">
+            {layer.id === 'direction' && <figcaption className="legend-title">Beneath: elevation, m</figcaption>}
             <div className="legend-bar" style={{ background: gradient }} aria-hidden="true" />
             <div className="legend-scale mono">
               <span>{elevation.low.toFixed(1)} m</span>
@@ -36,7 +39,6 @@ export function MapLegend({ layer, elevation, hotspots, reports }: MapLegendProp
             </div>
           </figure>
         )}
-        {layer?.id === 'direction' && <p className="map-legend-note">Lines point downhill, darkest at the arrow end.</p>}
         {layer && layer.classes.length > 0 && (
           <ul className="map-legend-classes">
             {layer.classes.map((c) => (

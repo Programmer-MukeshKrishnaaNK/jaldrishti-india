@@ -211,6 +211,10 @@
   color: var(--ink-2);
 }
 
+.map-legend-note + .legend {
+  margin-top: var(--s2);
+}
+
 .map-legend .legend + .map-legend-symbols {
   margin-top: var(--s3);
 }

@@ -7,11 +7,14 @@ interface EvidenceSectionProps {
   onVisibleChange: (visible: boolean) => void
 }
 
+const REPORTED_PLACES = new Set(INCIDENT_POINTS.map((p) => p.place)).size
+
 const formatDate = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export function EvidenceSection({ selection, visible, onVisibleChange }: EvidenceSectionProps) {
-  const inside = selection ? pointsInside(selection) : []
+  // A place named in more than one report has a point per report; counts are of places.
+  const placesInside = selection ? [...new Set(pointsInside(selection).map((p) => p.place))] : []
 
   return (
     <section className="panel-section" aria-labelledby="evidence-heading">
@@ -24,13 +27,13 @@ export function EvidenceSection({ selection, visible, onVisibleChange }: Evidenc
       </p>
       <label className="evidence-toggle">
         <input type="checkbox" checked={visible} onChange={(event) => onVisibleChange(event.target.checked)} />
-        Show {INCIDENT_POINTS.length} reported places on the map
+        Show {REPORTED_PLACES} reported places on the map
       </label>
       {selection && (
         <p className="panel-note">
-          {inside.length === 0
+          {placesInside.length === 0
             ? 'No reported place falls inside the selected area.'
-            : `${inside.length} reported place${inside.length > 1 ? 's' : ''} inside the selected area: ${[...new Set(inside.map((p) => p.place))].join(', ')}.`}
+            : `${placesInside.length} reported place${placesInside.length > 1 ? 's' : ''} inside the selected area: ${placesInside.join(', ')}.`}
         </p>
       )}
       <ul className="evidence-list">

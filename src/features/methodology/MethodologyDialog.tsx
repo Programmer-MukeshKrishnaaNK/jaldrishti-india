@@ -60,7 +60,10 @@ export function MethodologyDialog({ open, onClose }: MethodologyDialogProps) {
             </tr>
             <tr>
               <th scope="row">Screening</th>
-              <td>Relative hotspot categories from documented points.</td>
+              <td>
+                Relative hotspot categories from rule-based points for modelled ponding, runoff passing, HAND and slope (see
+                Hotspot screening). News reports play no part in them.
+              </td>
             </tr>
             <tr>
               <th scope="row">Reported</th>
