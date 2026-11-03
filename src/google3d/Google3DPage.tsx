@@ -111,7 +111,7 @@ export function Google3DPage() {
       outerWidth: 0.5,
       drawsOccludedSegments: true,
     }) as HTMLElement & Record<string, unknown>
-    outline.path = outline.coordinates = bboxPath(ready.bbox)
+    outline.path = bboxPath(ready.bbox)
     added.push(outline)
 
     for (const r of rectangles) {
@@ -120,7 +120,7 @@ export function Google3DPage() {
         fillColor: POND_CLASSES[r.depthClass].color,
         strokeWidth: 0,
       }) as HTMLElement & Record<string, unknown>
-      polygon.path = polygon.outerCoordinates = r.path
+      polygon.path = r.path
       added.push(polygon)
     }
 
