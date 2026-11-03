@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Header } from '../components/Header'
 import { AreaSection } from '../features/area/AreaSection'
 import { EvidenceSection } from '../features/evidence/EvidenceSection'
@@ -221,9 +222,18 @@ export function App() {
           ))}
         </div>
         {view === '3d' && (
-          <Suspense fallback={<p className="map-notice">Loading 3D view…</p>}>
-            <Terrain3DView grid={demGrid} scenario={scenario} />
-          </Suspense>
+          <ErrorBoundary
+            label="The 3D view"
+            actions={
+              <button type="button" className="button" onClick={() => setView('2d')}>
+                Back to 2D
+              </button>
+            }
+          >
+            <Suspense fallback={<p className="map-notice">Loading 3D view…</p>}>
+              <Terrain3DView grid={demGrid} scenario={scenario} />
+            </Suspense>
+          </ErrorBoundary>
         )}
         {view === '2d' && (
           <MapLegend

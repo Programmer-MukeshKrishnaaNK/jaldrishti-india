@@ -1,0 +1,49 @@
+.error-fallback {
+  max-width: 560px;
+  margin: var(--s6) auto;
+  padding: var(--s4);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+}
+
+.error-fallback h2 {
+  margin: 0 0 var(--s2);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.error-fallback p {
+  margin: 0;
+}
+
+.error-fallback-details {
+  margin-top: var(--s3);
+  color: var(--ink-2);
+}
+
+.error-fallback-details summary {
+  cursor: pointer;
+}
+
+.error-fallback-details pre {
+  max-height: 240px;
+  margin: var(--s2) 0 0;
+  overflow: auto;
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Inside the map area the panel sits over the map, centred. */
+.app-map > .error-fallback {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 50%;
+  width: min(480px, calc(100% - 2 * var(--s4)));
+  margin: 0;
+  translate: -50% -50%;
+}
