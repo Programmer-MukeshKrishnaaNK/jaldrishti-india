@@ -28,6 +28,15 @@ import type { BasemapStatus, PointerPosition } from '../types/map'
 
 const HOTSPOT_ZOOM = 15.5
 
+/** Element-wise equality, with no-data (NaN) equal to itself. */
+function sameValues(a: Float32Array, b: Float32Array | null): boolean {
+  if (!b || a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i] && !(Number.isNaN(a[i]) && Number.isNaN(b[i]))) return false
+  }
+  return true
+}
+
 // Three.js is only downloaded the first time the 3D view is opened.
 const Terrain3DView = lazy(() => import('../features/terrain3d/Terrain3DView'))
 
@@ -67,6 +76,12 @@ export function App() {
     if (coefficientMode.kind === 'uniform') return uniformCoefficientGrid(demGrid.width * demGrid.height, coefficientMode.value)
     return landCover.state.status === 'ready' ? coefficientGrid(landCover.state.landCover, coefficients) : null
   }, [demGrid, coefficientMode, landCover.state, coefficients])
+
+  // Whether the shown scenario ran with coefficients other than the current ones.
+  const coefficientsChanged = useMemo(
+    () => scenario.status === 'ready' && !sameValues(scenario.coefficients, coefficientCells),
+    [scenario, coefficientCells],
+  )
 
   const flowLines = useMemo(
     () => (hydro.status === 'ready' && activeLayer === 'direction' ? flowDirectionLines(hydro.grid, hydro.result.directions) : null),
@@ -170,6 +185,7 @@ export function App() {
           rainfallMm={rainfallMm}
           onRainfallChange={setRainfallMm}
           scenario={scenario}
+          coefficientsChanged={coefficientsChanged}
           onRun={runScenario}
         />
         <HotspotSection scenario={scenario} grid={demGrid} selectedRank={selectedHotspot} onSelect={selectHotspot} />

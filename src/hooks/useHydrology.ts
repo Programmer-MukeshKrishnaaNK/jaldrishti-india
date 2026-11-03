@@ -18,7 +18,14 @@ export type HydrologyState =
 export type ScenarioState =
   | { status: 'idle' }
   | { status: 'running'; rainfallMm: number; startedAt: number }
-  | { status: 'ready'; result: ScenarioPayload; elapsedMs: number; stale: boolean }
+  | {
+      status: 'ready'
+      result: ScenarioPayload
+      elapsedMs: number
+      stale: boolean
+      /** The coefficient grid the scenario ran with, to tell when the inputs have since changed. */
+      coefficients: Float32Array
+    }
   | { status: 'error'; message: string; rainfallMm: number }
 
 export interface ScenarioRequest {
@@ -29,6 +36,8 @@ export interface ScenarioRequest {
 
 type Tracked = HydrologyState & { forGrid: ElevationGrid | null; forAttempt: number }
 type TrackedScenario = ScenarioState & { forGrid: ElevationGrid | null }
+
+const WORKER_FAILED = 'The analysis worker stopped unexpectedly. Try again.'
 
 /**
  * Runs the hydrology engine and rainfall scenarios in a Web Worker for the given
@@ -43,6 +52,7 @@ export function useHydrology(grid: ElevationGrid | null) {
   const [attempt, setAttempt] = useState(0)
   const worker = useRef<Worker | null>(null)
   const ids = useRef({ run: 0, threshold: 0, scenario: 0 })
+  const scenarioInputs = useRef<Float32Array | null>(null)
   const threshold = useRef(thresholdM2)
 
   useEffect(() => {
@@ -76,11 +86,14 @@ export function useHydrology(grid: ElevationGrid | null) {
         )
       } else if (message.type === 'scenario') {
         if (message.id !== counters.current.scenario) return
+        const coefficients = scenarioInputs.current
+        if (!coefficients) return
         setScenario((previous) => ({
           status: 'ready',
           result: message.payload,
           elapsedMs: previous.status === 'running' ? performance.now() - previous.startedAt : 0,
           stale: false,
+          coefficients,
           forGrid: grid,
         }))
       } else if (message.request === 'scenario') {
@@ -96,10 +109,22 @@ export function useHydrology(grid: ElevationGrid | null) {
         track({ status: 'error', message: message.message })
       }
     }
-    instance.onerror = (event) => {
+    // A worker that throws outside its message handler, or a reply that cannot be
+    // deserialised, ends every request in flight; each becomes an error with a retry.
+    const fail = (message: string) => {
       if (id !== counters.current.run) return
-      track({ status: 'error', message: event.message || 'The analysis worker stopped unexpectedly.' })
+      track({ status: 'error', message })
+      setScenario((previous) =>
+        previous.status === 'running' && previous.forGrid === grid
+          ? { status: 'error', message, rainfallMm: previous.rainfallMm, forGrid: grid }
+          : previous,
+      )
     }
+    instance.onerror = (event) => {
+      event.preventDefault()
+      fail(event.message ? `${event.message}. Try again.` : WORKER_FAILED)
+    }
+    instance.onmessageerror = () => fail(WORKER_FAILED)
 
     const hydroGrid = fromElevationGrid(grid)
     // The UI keeps the original elevations, so the worker gets its own copy.
@@ -147,6 +172,7 @@ export function useHydrology(grid: ElevationGrid | null) {
     (request: ScenarioRequest) => {
       if (state.status !== 'ready' || !worker.current) return
       const id = ++ids.current.scenario
+      scenarioInputs.current = request.coefficients
       setScenario({ status: 'running', rainfallMm: request.rainfallMm, startedAt: performance.now(), forGrid: grid })
       const coefficients = request.coefficients.slice()
       const message: HydroRequest = {

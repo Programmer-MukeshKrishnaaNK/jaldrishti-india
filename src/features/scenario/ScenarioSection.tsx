@@ -20,6 +20,8 @@ interface ScenarioSectionProps {
   rainfallMm: number
   onRainfallChange: (mm: number) => void
   scenario: ScenarioState
+  /** True when the runoff coefficients differ from those the shown result used. */
+  coefficientsChanged: boolean
   onRun: () => void
 }
 
@@ -231,6 +233,9 @@ export function ScenarioSection(props: ScenarioSectionProps) {
               )}
               {scenario.result.rainfallMm !== rainfallMm && (
                 <p className="panel-note">Results below are for {scenario.result.rainfallMm} mm. Run again to apply {rainfallMm} mm.</p>
+              )}
+              {props.coefficientsChanged && (
+                <p className="panel-note">The runoff coefficients have changed since this run. Run again to apply them.</p>
               )}
               <MassBalance scenario={scenario} />
               <Comparison scenario={scenario} />
