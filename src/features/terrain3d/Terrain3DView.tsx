@@ -3,36 +3,33 @@ import type { ScenarioState } from '../../hooks/useHydrology'
 import type { ElevationGrid } from '../../lib/dem/types'
 import { ELEVATION_RAMP } from '../../lib/dem/render'
 import { MIN_DRAWN_POND_M, terrainFrame } from '../../lib/terrain3d/geometry'
-import { TerrainScene, type PointerCell } from './scene'
+import { TerrainScene, type HotspotPin, type PointerCell } from './scene'
+import { WEBGL_LOST, WEBGL_UNAVAILABLE, webglAvailable } from './support'
 import './Terrain3DView.css'
 
 interface Terrain3DViewProps {
   grid: ElevationGrid | null
   scenario: ScenarioState
+  selectedRank: number | null
+  onSelectHotspot: (rank: number | null) => void
+  /** The view cannot draw on this device; the reason is in plain words. */
+  onUnavailable: (reason: string) => void
 }
+
+/** Pins shown, matching the 2D map and the hotspot list. */
+const PIN_COUNT = 10
 
 const EXAGGERATIONS = [1, 2, 3, 5]
 const DEFAULT_EXAGGERATION = 3
-
-const WEBGL_MESSAGE = 'This browser could not start WebGL, so the 3D view is unavailable. The 2D map still works.'
-
-function webglAvailable(): boolean {
-  try {
-    const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext('webgl2') ?? canvas.getContext('webgl'))
-  } catch {
-    return false
-  }
-}
 
 const gradient = `linear-gradient(to right, ${ELEVATION_RAMP.map(([t, c]) => `${c} ${t * 100}%`).join(', ')})`
 const metres = (v: number) => `${v.toFixed(1)} m`
 
 /** 3D view of the loaded terrain with modelled ponding and an illustrative rain animation. */
-export default function Terrain3DView({ grid, scenario }: Terrain3DViewProps) {
+export default function Terrain3DView({ grid, scenario, selectedRank, onSelectHotspot, onUnavailable }: Terrain3DViewProps) {
   const container = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<TerrainScene | null>(null)
-  const [webglError, setWebglError] = useState<string | null>(() => (webglAvailable() ? null : WEBGL_MESSAGE))
+  const [webglError, setWebglError] = useState<string | null>(() => (webglAvailable() ? null : WEBGL_UNAVAILABLE))
   const [exaggeration, setExaggeration] = useState(DEFAULT_EXAGGERATION)
   const [rain, setRain] = useState<'stopped' | 'playing' | 'paused'>('stopped')
   const [intensity, setIntensity] = useState(0.5)
@@ -40,6 +37,16 @@ export default function Terrain3DView({ grid, scenario }: Terrain3DViewProps) {
   const [azimuth, setAzimuth] = useState(0)
   const exaggerationId = useId()
   const intensityId = useId()
+
+  // Callbacks from the scene go through refs, so the renderer is never rebuilt for a new handler.
+  const handlers = useRef({ onSelectHotspot, onUnavailable })
+  useEffect(() => {
+    handlers.current = { onSelectHotspot, onUnavailable }
+  })
+
+  useEffect(() => {
+    if (webglError) handlers.current.onUnavailable(webglError)
+  }, [webglError])
 
   const pond = scenario.status === 'ready' ? scenario.result.pondDepthM : null
   const rainfallMm = scenario.status === 'ready' ? scenario.result.rainfallMm : null
@@ -70,11 +77,13 @@ export default function Terrain3DView({ grid, scenario }: Terrain3DViewProps) {
       console.error(error)
       // The renderer is an external system; its failure can only be learnt here.
       // oxlint-disable-next-line react/set-state-in-effect
-      setWebglError(WEBGL_MESSAGE)
+      setWebglError(WEBGL_UNAVAILABLE)
       return
     }
     scene.onPointerCell = setCell
     scene.onAzimuth = setAzimuth
+    scene.onHotspotClick = (rank) => handlers.current.onSelectHotspot(rank)
+    scene.onContextLost = () => setWebglError(WEBGL_LOST)
     sceneRef.current = scene
     return () => {
       sceneRef.current = null
@@ -107,6 +116,32 @@ export default function Terrain3DView({ grid, scenario }: Terrain3DViewProps) {
     sceneRef.current?.setRainIntensity(intensity)
   }, [intensity])
 
+  // The same ranked hotspots as the list and the 2D map, at their scoring cells.
+  const hotspots = scenario.status === 'ready' ? scenario.result.hotspots : null
+  const pins = useMemo<HotspotPin[]>(() => {
+    if (!hotspots || !grid) return []
+    return hotspots
+      .filter((h, k) => k < PIN_COUNT || h.rank === selectedRank)
+      .map((h) => ({
+        rank: h.rank,
+        category: h.category,
+        row: Math.floor(h.peak.index / grid.width),
+        col: h.peak.index % grid.width,
+        selected: h.rank === selectedRank,
+      }))
+  }, [hotspots, grid, selectedRank])
+  useEffect(() => {
+    sceneRef.current?.setHotspots(pins)
+  }, [pins, exaggeration])
+
+  // A newly chosen hotspot, from the pins or the list, brings the camera to it.
+  useEffect(() => {
+    const pin = pins.find((p) => p.selected)
+    if (pin) sceneRef.current?.focusCell(pin.row, pin.col)
+    // Only a change of selection moves the camera, not a rebuilt pin list.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRank])
+
   const play = () => {
     sceneRef.current?.startRain()
     setRain('playing')
@@ -123,7 +158,7 @@ export default function Terrain3DView({ grid, scenario }: Terrain3DViewProps) {
   if (webglError) {
     return (
       <div className="view3d view3d-message" role="alert">
-        <p>{webglError}</p>
+        <p>{webglError} The 2D map still works.</p>
       </div>
     )
   }
@@ -189,6 +224,14 @@ export default function Terrain3DView({ grid, scenario }: Terrain3DViewProps) {
               </p>
             ) : (
               <p className="panel-note">Run a rainfall scenario to see modelled ponding here.</p>
+            )}
+            {scenario.status === 'ready' && scenario.result.hotspots.length > 0 && (
+              <p className="view3d-water">
+                <span className="symbol-hotspot mono" aria-hidden="true">
+                  1
+                </span>
+                Ranked hotspots (top {Math.min(PIN_COUNT, scenario.result.hotspots.length)}); select a pin to explain it
+              </p>
             )}
             {scenario.status === 'ready' && scenario.stale && (
               <p className="panel-note">The scenario is out of date for the current drainage threshold; run it again.</p>

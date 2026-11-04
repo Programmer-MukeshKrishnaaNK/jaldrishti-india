@@ -1,11 +1,13 @@
 import {
   BufferAttribute,
   BufferGeometry,
+  CanvasTexture,
   CircleGeometry,
   Color,
   DirectionalLight,
   DoubleSide,
   Fog,
+  Group,
   HemisphereLight,
   InstancedMesh,
   LineBasicMaterial,
@@ -18,7 +20,11 @@ import {
   PerspectiveCamera,
   Raycaster,
   Scene,
+  Sprite,
+  SpriteMaterial,
+  SRGBColorSpace,
   Vector2,
+  Vector3,
   WebGLRenderer,
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -27,6 +33,7 @@ import {
   buildTerrainGeometry,
   buildWaterGeometry,
   cellAtLocal,
+  heightY,
   terrainHeightAt,
   type TerrainFrame,
 } from '../../lib/terrain3d/geometry'
@@ -46,6 +53,48 @@ const RISE_SECONDS = 4
 export interface PointerCell {
   row: number
   col: number
+}
+
+/** A ranked hotspot drawn as a numbered pin at its scoring cell. */
+export interface HotspotPin {
+  rank: number
+  category: 'higher' | 'moderate'
+  row: number
+  col: number
+  selected: boolean
+}
+
+// The 2D map's hotspot colours, so a pin reads the same in both views.
+const PIN_FILL = { higher: '#8a5a00', moderate: '#e3c473' } as const
+const PIN_TEXT = { higher: '#ffffff', moderate: '#15202b' } as const
+/** Pin head height as a share of the view's height; pins keep their size at any zoom. */
+const PIN_SCALE = 0.042
+const SELECTED_PIN_SCALE = 0.054
+/** Pointer travel, in pixels, beyond which a press is a drag rather than a click. */
+const CLICK_TOLERANCE_PX = 5
+const FOCUS_SECONDS = 0.9
+
+function pinTexture(rank: number, category: HotspotPin['category'], selected: boolean): CanvasTexture {
+  const size = 96
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const g = canvas.getContext('2d')!
+  const r = size / 2 - 6
+  g.beginPath()
+  g.arc(size / 2, size / 2, r, 0, Math.PI * 2)
+  g.fillStyle = PIN_FILL[category]
+  g.fill()
+  g.lineWidth = selected ? 9 : 5
+  g.strokeStyle = selected ? '#15202b' : '#f1ede4'
+  g.stroke()
+  g.fillStyle = PIN_TEXT[category]
+  g.font = `600 ${rank > 9 ? 36 : 44}px 'IBM Plex Sans', system-ui, sans-serif`
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.fillText(String(rank), size / 2, size / 2 + 2)
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  return texture
 }
 
 /**
@@ -86,8 +135,16 @@ export class TerrainScene {
   private lastTime = 0
   private lastAzimuth = Number.NaN
 
+  private pins = new Group()
+  private pinData: HotspotPin[] = []
+  private pressAt: { x: number; y: number } | null = null
+  private focus: { fromTarget: Vector3; toTarget: Vector3; fromCamera: Vector3; toCamera: Vector3; t: number } | null = null
+
   onPointerCell: (cell: PointerCell | null) => void = () => {}
   onAzimuth: (radians: number) => void = () => {}
+  onHotspotClick: (rank: number) => void = () => {}
+  /** The browser took the WebGL context away, for example under memory pressure. */
+  onContextLost: () => void = () => {}
 
   private container: HTMLElement
 
@@ -129,7 +186,11 @@ export class TerrainScene {
     this.dummy.updateMatrix()
     for (let k = 0; k < MAX_SPLASHES; k++) this.splashes.setMatrixAt(k, this.dummy.matrix)
     this.scene.add(this.splashes)
+    this.scene.add(this.pins)
 
+    this.renderer.domElement.addEventListener('webglcontextlost', this.handleContextLost)
+    this.renderer.domElement.addEventListener('pointerdown', this.handlePointerDown)
+    this.renderer.domElement.addEventListener('pointerup', this.handlePointerUp)
     this.renderer.domElement.addEventListener('pointermove', this.handlePointerMove)
     this.renderer.domElement.addEventListener('pointerleave', this.handlePointerLeave)
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -179,6 +240,7 @@ export class TerrainScene {
     if (keepCamera) this.controls.update()
     else this.frameCamera(size, relief)
     this.respawnAllDrops()
+    this.setHotspots(this.pinData)
     return built.frame
   }
 
@@ -188,6 +250,7 @@ export class TerrainScene {
    * update; that is flushed first so the view lands in the same place every time.
    */
   private frameCamera(size: number, relief: number): void {
+    this.focus = null
     this.controls.enableDamping = false
     this.controls.update()
     // Angled view from the south-south-east, looking north across the area.
@@ -231,6 +294,68 @@ export class TerrainScene {
     return { cells: built.cells, maxDepthM: built.maxDepthM }
   }
 
+  /** Numbered pins for ranked hotspots, standing on the terrain at their scoring cells. */
+  setHotspots(pins: HotspotPin[]): void {
+    this.pinData = pins
+    for (const child of [...this.pins.children]) {
+      this.pins.remove(child)
+      if (child instanceof Sprite) {
+        child.material.map?.dispose()
+        child.material.dispose()
+      } else if (child instanceof LineSegments) {
+        child.geometry.dispose()
+        ;(child.material as LineBasicMaterial).dispose()
+      }
+    }
+    if (!this.grid || !this.frame) return
+    const frame = this.frame
+    const stemHeight = Math.max(frame.extentX, frame.extentZ) * 0.035
+    const stems: number[] = []
+    // Lowest rank last, so it draws over any pin it overlaps.
+    for (const pin of [...pins].sort((a, b) => b.rank - a.rank)) {
+      const elevation = this.grid.values[pin.row * frame.width + pin.col]
+      if (!Number.isFinite(elevation)) continue
+      const x = frame.x[pin.col]
+      const z = frame.z[pin.row]
+      const y = heightY(frame, elevation)
+      stems.push(x, y, z, x, y + stemHeight, z)
+      const sprite = new Sprite(
+        new SpriteMaterial({ map: pinTexture(pin.rank, pin.category, pin.selected), sizeAttenuation: false, depthTest: false }),
+      )
+      sprite.scale.setScalar(pin.selected ? SELECTED_PIN_SCALE : PIN_SCALE)
+      sprite.position.set(x, y + stemHeight, z)
+      sprite.renderOrder = pin.selected ? 12 : 10
+      sprite.userData.rank = pin.rank
+      this.pins.add(sprite)
+    }
+    if (stems.length) {
+      const geometry = new BufferGeometry()
+      geometry.setAttribute('position', new BufferAttribute(Float32Array.from(stems), 3))
+      this.pins.add(new LineSegments(geometry, new LineBasicMaterial({ color: SLATE })))
+    }
+  }
+
+  /** Eases the camera to look at a cell from closer in, keeping the current viewing direction. */
+  focusCell(row: number, col: number): void {
+    if (!this.grid || !this.frame) return
+    const frame = this.frame
+    const elevation = this.grid.values[row * frame.width + col]
+    if (!Number.isFinite(elevation)) return
+    const toTarget = new Vector3(frame.x[col], heightY(frame, elevation), frame.z[row])
+    const offset = this.camera.position.clone().sub(this.controls.target)
+    const distance = Math.max(this.controls.minDistance * 1.6, Math.max(frame.extentX, frame.extentZ) * 0.42)
+    offset.setLength(Math.min(offset.length(), distance))
+    const toCamera = toTarget.clone().add(offset)
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    this.focus = {
+      fromTarget: this.controls.target.clone(),
+      toTarget,
+      fromCamera: this.camera.position.clone(),
+      toCamera,
+      t: reduce ? 1 : 0,
+    }
+  }
+
   /** Share of the maximum number of rain streaks to animate, 0–1. */
   setRainIntensity(share: number): void {
     this.activeDrops = Math.round(Math.min(1, Math.max(0, share)) * MAX_DROPS)
@@ -270,8 +395,13 @@ export class TerrainScene {
   }
 
   dispose(): void {
+    // forceContextLoss below fires webglcontextlost; that is not a failure.
+    this.renderer.domElement.removeEventListener('webglcontextlost', this.handleContextLost)
+    this.setHotspots([])
     this.renderer.setAnimationLoop(null)
     this.resizeObserver.disconnect()
+    this.renderer.domElement.removeEventListener('pointerdown', this.handlePointerDown)
+    this.renderer.domElement.removeEventListener('pointerup', this.handlePointerUp)
     this.renderer.domElement.removeEventListener('pointermove', this.handlePointerMove)
     this.renderer.domElement.removeEventListener('pointerleave', this.handlePointerLeave)
     this.controls.dispose()
@@ -418,6 +548,14 @@ export class TerrainScene {
         this.applyWaterLevel(this.riseProgress)
       }
     }
+    if (this.focus) {
+      const f = this.focus
+      f.t = Math.min(1, f.t + dt / FOCUS_SECONDS)
+      const eased = 1 - (1 - f.t) ** 3
+      this.controls.target.lerpVectors(f.fromTarget, f.toTarget, eased)
+      this.camera.position.lerpVectors(f.fromCamera, f.toCamera, eased)
+      if (f.t >= 1) this.focus = null
+    }
     this.controls.update()
     const azimuth = this.controls.getAzimuthalAngle()
     if (Math.abs(azimuth - this.lastAzimuth) > 0.002 || Number.isNaN(this.lastAzimuth)) {
@@ -434,6 +572,31 @@ export class TerrainScene {
     this.raycaster.setFromCamera(this.pointer, this.camera)
     const hit = this.raycaster.intersectObject(this.terrain, false)[0]
     this.onPointerCell(hit ? cellAtLocal(this.frame, hit.point.x, hit.point.z) : null)
+  }
+
+  private handleContextLost = (event: Event): void => {
+    event.preventDefault()
+    this.renderer.setAnimationLoop(null)
+    this.onContextLost()
+  }
+
+  private handlePointerDown = (event: PointerEvent): void => {
+    this.pressAt = { x: event.clientX, y: event.clientY }
+    // A drag takes over from any camera move still running.
+    this.focus = null
+  }
+
+  /** A press released where it started is a click; a click on a pin selects its hotspot. */
+  private handlePointerUp = (event: PointerEvent): void => {
+    const press = this.pressAt
+    this.pressAt = null
+    if (!press || Math.hypot(event.clientX - press.x, event.clientY - press.y) > CLICK_TOLERANCE_PX) return
+    const rect = this.renderer.domElement.getBoundingClientRect()
+    const at = new Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1)
+    this.raycaster.setFromCamera(at, this.camera)
+    const sprites = this.pins.children.filter((child) => child instanceof Sprite)
+    const hit = this.raycaster.intersectObjects(sprites, false)[0]
+    if (hit) this.onHotspotClick(hit.object.userData.rank as number)
   }
 
   private handlePointerMove = (event: PointerEvent): void => {

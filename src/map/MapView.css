@@ -131,6 +131,33 @@
   background: var(--ink);
 }
 
+.view-switch button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -4px;
+}
+
+/* Shown on the 2D map after the 3D view could not start. */
+.view-notice {
+  position: absolute;
+  z-index: 5;
+  top: 50px;
+  right: 52px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  width: min(380px, calc(100% - 64px));
+  padding: var(--s3);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  border: 1px solid var(--ink);
+  border-left: 4px solid var(--warning);
+  border-radius: var(--radius);
+}
+
+.view-notice p {
+  margin: 0;
+}
+
 /* Map key, bottom-left, clear of the attribution (bottom-right) and the scale (top-left). */
 .map-legend {
   position: absolute;

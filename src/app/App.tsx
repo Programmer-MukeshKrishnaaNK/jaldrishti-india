@@ -10,6 +10,7 @@ import { MethodologyDialog } from '../features/methodology/MethodologyDialog'
 import { ScenarioSection, type CoefficientMode } from '../features/scenario/ScenarioSection'
 import { SearchBox } from '../features/search/SearchBox'
 import { TerrainSection } from '../features/terrain/TerrainSection'
+import { webglAvailable, WEBGL_UNAVAILABLE } from '../features/terrain3d/support'
 import { useAnalysisImage } from '../hooks/useAnalysisImage'
 import { useHydrology } from '../hooks/useHydrology'
 import { useLandCover } from '../hooks/useLandCover'
@@ -41,6 +42,8 @@ function sameValues(a: Float32Array, b: Float32Array | null): boolean {
 // Three.js is only downloaded the first time the 3D view is opened.
 const Terrain3DView = lazy(() => import('../features/terrain3d/Terrain3DView'))
 
+const VIEW_LABEL = { '2d': '2D Map', '3d': '3D View' } as const
+
 export function App() {
   const [basemap, setBasemap] = useState<BasemapStatus>({ state: 'loading' })
   const [pointer, setPointer] = useState<PointerPosition | null>(null)
@@ -57,6 +60,9 @@ export function App() {
   const [showReports, setShowReports] = useState(true)
   const [methodOpen, setMethodOpen] = useState(false)
   const [view, setView] = useState<'2d' | '3d'>('2d')
+  // Why the 3D view could not be shown, once it has failed; the 2D map is shown instead.
+  const [threeDProblem, setThreeDProblem] = useState<string | null>(null)
+  const [hasWebgl] = useState(webglAvailable)
   const terrain = useTerrain()
 
   const terrainState = terrain.state
@@ -141,6 +147,16 @@ export function App() {
     }))
   }
 
+  const showView = (mode: '2d' | '3d') => {
+    if (mode === '3d' && !hasWebgl) {
+      setThreeDProblem(WEBGL_UNAVAILABLE)
+      return
+    }
+    setThreeDProblem(null)
+    setView(mode)
+    if (mode === '3d') setDrawing(false)
+  }
+
   const pointerElevation =
     terrainState.status === 'ready' && pointer ? elevationAt(terrainState.grid, pointer.lng, pointer.lat) : null
 
@@ -212,26 +228,47 @@ export function App() {
               type="button"
               role="radio"
               aria-checked={view === mode}
-              onClick={() => {
-                setView(mode)
-                if (mode === '3d') setDrawing(false)
-              }}
+              title={mode === '3d' && !hasWebgl ? WEBGL_UNAVAILABLE : undefined}
+              onClick={() => showView(mode)}
             >
-              {mode.toUpperCase()}
+              {VIEW_LABEL[mode]}
             </button>
           ))}
         </div>
+        {threeDProblem && view === '2d' && (
+          <div className="view-notice" role="status">
+            <p>
+              <strong>Showing the 2D map.</strong> {threeDProblem} Everything else works here, with the same area and
+              scenario.
+            </p>
+            <button type="button" className="button button-quiet" onClick={() => setThreeDProblem(null)}>
+              Dismiss
+            </button>
+          </div>
+        )}
         {view === '3d' && (
           <ErrorBoundary
             label="The 3D view"
             actions={
               <button type="button" className="button" onClick={() => setView('2d')}>
-                Back to 2D
+                Use the 2D map
               </button>
             }
           >
             <Suspense fallback={<p className="map-notice">Loading 3D view…</p>}>
-              <Terrain3DView grid={demGrid} scenario={scenario} />
+              <Terrain3DView
+                grid={demGrid}
+                scenario={scenario}
+                selectedRank={selectedHotspot}
+                onSelectHotspot={(rank) => {
+                  const hotspot = scenario.status === 'ready' ? scenario.result.hotspots.find((h) => h.rank === rank) : null
+                  selectHotspot(hotspot ?? null)
+                }}
+                onUnavailable={(reason) => {
+                  setThreeDProblem(reason)
+                  setView('2d')
+                }}
+              />
             </Suspense>
           </ErrorBoundary>
         )}
