@@ -40,7 +40,8 @@ export interface AreaInput {
   /** Rainfall chosen in the controls, which may differ from the scenario shown. */
   chosenRainfallMm: number
   selected: Hotspot | null
-  view: '2d' | '3d'
+  /** The map being shown: PaaniPulse's 2D map, its 3D terrain view, or a Google map. */
+  view: '2d' | '3d' | 'google'
 }
 
 export interface AreaSection {
@@ -182,9 +183,12 @@ function looking(input: AreaInput, s: ReturnType<typeof stats>): AreaSection {
     paragraphs.push('Choose a rainfall amount and run the scenario to see where rainwater could collect.')
   }
   paragraphs.push(
-    input.view === '3d'
-      ? 'In the 3D view, heights are stretched so that gentle slopes are visible. Blue shows water the model holds in low spots, and the numbered pins are hotspots.'
-      : 'On the map, colours show the height of the ground. The layers under Terrain analysis show how water moves; blue shows water the model holds in low spots, and numbered circles are hotspots.',
+    {
+      '3d': 'In the 3D view, heights are stretched so that gentle slopes are visible. Blue shows water the model holds in low spots, and the numbered pins are hotspots.',
+      '2d': 'On the map, colours show the height of the ground. The layers under Terrain analysis show how water moves; blue shows water the model holds in low spots, and numbered circles are hotspots.',
+      google:
+        'On the Google map, the imagery is only a backdrop. The outline, the blue water the model holds in low spots and the numbered hotspots all come from PaaniPulse’s own analysis.',
+    }[input.view],
   )
   return { id: 'looking', question: 'What am I looking at?', paragraphs }
 }

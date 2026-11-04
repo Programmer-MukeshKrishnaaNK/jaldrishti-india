@@ -169,9 +169,9 @@
 }
 
 @media (max-width: 767px) {
-  /* Below the view switch, clear of the north arrow. */
+  /* Below the view switch and the Google Maps link, clear of the north arrow. */
   .view3d-top {
-    top: 50px;
+    top: 146px;
     left: var(--s2);
     right: 52px;
     flex-wrap: nowrap;

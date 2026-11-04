@@ -108,7 +108,17 @@
   top: 10px;
   right: 52px;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
+  max-width: calc(100% - 64px);
+}
+
+/* Holds the Google maps while another view is shown, so they are not reloaded. */
+.google-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
 }
 
 .view-switch {
@@ -313,5 +323,17 @@
   .map-legend {
     width: min(220px, calc(100% - 20px));
     bottom: 36px;
+  }
+}
+
+/* Phones: the switch keeps one line per label; the Google Maps link wraps to a second row. */
+@media (max-width: 767px) {
+  .view-switch button {
+    padding: 0 var(--s2);
+    white-space: nowrap;
+  }
+
+  .view-notice {
+    top: 150px;
   }
 }

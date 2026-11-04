@@ -10,6 +10,7 @@ import { MethodologyDialog } from '../features/methodology/MethodologyDialog'
 import { ScenarioSection, type CoefficientMode } from '../features/scenario/ScenarioSection'
 import { SearchBox } from '../features/search/SearchBox'
 import { TerrainSection } from '../features/terrain/TerrainSection'
+import { GOOGLE_MAPS_CONFIGURED } from '../features/google/loadGoogleMaps'
 import { webglAvailable, WEBGL_UNAVAILABLE } from '../features/terrain3d/support'
 import { UnderstandSection } from '../features/understand/UnderstandSection'
 import { useAnalysisImage } from '../hooks/useAnalysisImage'
@@ -45,7 +46,13 @@ function sameValues(a: Float32Array, b: Float32Array | null): boolean {
 // Three.js is only downloaded the first time the 3D view is opened.
 const Terrain3DView = lazy(() => import('../features/terrain3d/Terrain3DView'))
 
-const VIEW_LABEL = { '2d': '2D Map', '3d': '3D View' } as const
+// Google Maps is downloaded only when a Google view is first opened, and only in builds with a key.
+const GoogleMapView = lazy(() => import('../features/google/GoogleMapView'))
+
+type View = '2d' | '3d' | 'g2d' | 'g3d'
+const VIEW_LABEL: Record<View, string> = { '2d': '2D Map', '3d': '3D View', g2d: 'Google 2D', g3d: 'Google 3D' }
+const VIEWS: View[] = GOOGLE_MAPS_CONFIGURED ? ['2d', '3d', 'g2d', 'g3d'] : ['2d', '3d']
+const isGoogle = (view: View) => view === 'g2d' || view === 'g3d'
 
 export function App() {
   const [basemap, setBasemap] = useState<BasemapStatus>({ state: 'loading' })
@@ -62,9 +69,13 @@ export function App() {
   const [selectedHotspot, setSelectedHotspot] = useState<number | null>(null)
   const [showReports, setShowReports] = useState(true)
   const [methodOpen, setMethodOpen] = useState(false)
-  const [view, setView] = useState<'2d' | '3d'>('2d')
-  // Why the 3D view could not be shown, once it has failed; the 2D map is shown instead.
+  const [view, setView] = useState<View>('2d')
+  // Why the 3D or a Google view could not be shown, once it has failed; the 2D map is shown instead.
   const [threeDProblem, setThreeDProblem] = useState<string | null>(null)
+  const [googleProblem, setGoogleProblem] = useState<string | null>(null)
+  // The Google maps stay mounted once opened, so switching back does not reload them.
+  const [googleOpened, setGoogleOpened] = useState(false)
+  const [lastGoogleMode, setLastGoogleMode] = useState<'2d' | '3d'>('3d')
   const [hasWebgl] = useState(webglAvailable)
   const [areaLabel, setAreaLabel] = useState('that you drew')
   // The searched place's name, for Google Maps when there is no selected area (e.g. a state).
@@ -160,14 +171,19 @@ export function App() {
     }))
   }
 
-  const showView = (mode: '2d' | '3d') => {
+  const showView = (mode: View) => {
     if (mode === '3d' && !hasWebgl) {
       setThreeDProblem(WEBGL_UNAVAILABLE)
       return
     }
     setThreeDProblem(null)
+    setGoogleProblem(null)
     setView(mode)
-    if (mode === '3d') setDrawing(false)
+    if (mode !== '2d') setDrawing(false)
+    if (isGoogle(mode)) {
+      setGoogleOpened(true)
+      setLastGoogleMode(mode === 'g2d' ? '2d' : '3d')
+    }
   }
 
   const scenarioResult = scenario.status === 'ready' ? scenario.result : null
@@ -194,7 +210,7 @@ export function App() {
         : null,
       chosenRainfallMm: rainfallMm,
       selected: scenarioResult?.hotspots.find((h) => h.rank === selectedHotspot) ?? null,
-      view,
+      view: isGoogle(view) ? 'google' : view,
     }
   }, [demGrid, areaLabel, landCoverReady, coefficientMode, scenarioResult, scenarioOutdated, rainfallMm, selectedHotspot, view])
 
@@ -274,7 +290,7 @@ export function App() {
       <main className="app-map" aria-label="Map of India">
         <div className="view-controls">
           <div className="view-switch" role="radiogroup" aria-label="Map view">
-            {(['2d', '3d'] as const).map((mode) => (
+            {VIEWS.map((mode) => (
               <button
                 key={mode}
                 type="button"
@@ -300,6 +316,24 @@ export function App() {
             </a>
           )}
         </div>
+        {googleProblem && view === '2d' && (
+          <div className="view-notice" role="status">
+            <p>
+              <strong>Google Maps is unavailable, so the 2D map is shown.</strong> {googleProblem} The area, scenario
+              and hotspots are unchanged. PaaniPulse’s own 3D terrain view does not need Google.
+            </p>
+            <div className="button-row">
+              {hasWebgl && (
+                <button type="button" className="button" onClick={() => showView('3d')}>
+                  Open 3D View
+                </button>
+              )}
+              <button type="button" className="button button-quiet" onClick={() => setGoogleProblem(null)}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
         {threeDProblem && view === '2d' && (
           <div className="view-notice" role="status">
             <p>
@@ -336,6 +370,39 @@ export function App() {
               />
             </Suspense>
           </ErrorBoundary>
+        )}
+        {googleOpened && (
+          <div className="google-layer" hidden={!isGoogle(view)}>
+            <ErrorBoundary
+              label="Google Maps"
+              actions={
+                <button type="button" className="button" onClick={() => showView('2d')}>
+                  Use the 2D map
+                </button>
+              }
+            >
+              <Suspense fallback={<p className="map-notice">Loading Google Maps…</p>}>
+                <GoogleMapView
+                  mode={isGoogle(view) ? (view === 'g2d' ? '2d' : '3d') : lastGoogleMode}
+                  selection={selection}
+                  fallbackCentre={centre}
+                  fallbackZoom={zoom}
+                  grid={demGrid}
+                  scenario={scenario}
+                  selectedRank={selectedHotspot}
+                  onSelectHotspot={(rank) => {
+                    const hotspot = scenario.status === 'ready' ? scenario.result.hotspots.find((h) => h.rank === rank) : null
+                    selectHotspot(hotspot ?? null)
+                  }}
+                  onUnavailable={(reason) => {
+                    setGoogleProblem(reason)
+                    setGoogleOpened(false)
+                    setView((current) => (isGoogle(current) ? '2d' : current))
+                  }}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          </div>
         )}
         {view === '2d' && (
           <MapLegend

@@ -24,6 +24,7 @@ Working now:
 - Hotspot screening with relative categories, ranked hotspots and a "Why here?" explanation generated from each hotspot's values.
 - Documented waterlogging reports for Madurai from dated news articles, shown as context.
 - A 3D view of the loaded terrain (Three.js): real Copernicus elevations with a stated vertical exaggeration, the scenario's modelled ponding drawn cell by cell at its modelled water level, numbered pins for the ranked hotspots, and an illustrative rain animation. The 2D map stays available as a fallback.
+- **Google 2D** and **Google 3D** views (Google Maps JavaScript API, Photorealistic 3D through `Map3DElement`) of the selected area, with PaaniPulse's own outline, modelled ponding by depth class and ranked hotspots drawn on top. They appear only in builds given a Google Maps key; see [Google Maps views](#google-maps-views).
 - A **Google Maps ↗** link beside the view switch that opens the selected area's centre (or the searched place's name) on the official Google Maps website in a new tab. It is a plain link in the documented Maps URLs format: no API key, no embedded Google map, and only the coordinates or place name are sent.
 - "Understand this area": a plain-language explanation of the selected area and scenario, written from the model's own results for people without a hydrology background.
 - A method and limitations dialog in the app; the full write-up is in [docs/methodology.md](docs/methodology.md).
@@ -57,7 +58,22 @@ The rain is a visualisation of the chosen hypothetical total; its speed, density
 
 If WebGL is unavailable, the renderer fails to start or the browser takes the graphics context away (for example under memory pressure), the app returns to the 2D map and says why. The area, scenario and selected hotspot are kept, because they live outside the 3D view.
 
-The 3D view uses PaaniPulse's own Three.js scene, not Google Maps. A photorealistic Google Maps 3D prototype exists on the `google-maps-3d-experiment` branch, but it is not part of the public app: production use needs a billing-enabled Google Cloud project, the Maps Demo Key is for evaluation only, and Google's terms do not allow its 3D maps beside a non-Google map such as the MapLibre basemap.
+The 3D View is PaaniPulse's own Three.js scene and needs no key. Google's Photorealistic 3D is a separate view, described under [Google Maps views](#google-maps-views).
+
+## Google Maps views
+
+When the build has `VITE_GOOGLE_MAPS_DEMO_KEY`, the map switch offers **Google 2D** (satellite with labels) and **Google 3D** (Photorealistic 3D Maps) beside the 2D map and the 3D terrain view. Both follow the app's selection, scenario and hotspot state:
+
+- the camera frames the selected area, or the selected hotspot;
+- the analysis outline, the scenario's modelled ponding (the same `pondDepthM` cells, merged into rectangles along each row and coloured by depth class) and the top-10 hotspots are drawn from PaaniPulse's results; selecting a pin selects that hotspot everywhere;
+- changing the rainfall redraws the overlays on the same map; each Google map is created once per page and kept, so switching views does not reload it;
+- the rain is an illustrative screen effect, labelled as such. Google imagery is never used in a calculation.
+
+If the script cannot load or Google rejects the key (for example when the Demo Key's daily quota is used up), the app returns to the 2D map, says why, and offers PaaniPulse's own 3D terrain view, which needs no key. Builds without a key do not show the Google options at all.
+
+**Key.** Locally, put `VITE_GOOGLE_MAPS_DEMO_KEY=…` in `.env.local` (ignored by Git). For GitHub Pages, add a repository secret with the same name; the deploy workflow passes it to the build. A browser key is readable by anyone who loads the site, so restrict it to the site's referrer in the Google Cloud console. `node scripts/check-google-3d-access.mjs` reports which Google 3D APIs the local key reaches without printing it.
+
+**Terms.** The key is a Google Maps Demo Key. Google's Maps Demo Project terms describe it as for evaluation and testing only and prohibit production use, and the Google Maps Platform terms (§3.2.3(e)) restrict using Google maps with or near a non-Google map. The project owner chose to deploy these views on the public hackathon site with that key regardless; Google can limit or end the key at any time, and the rest of PaaniPulse does not depend on it.
 
 ## Understand this area
 

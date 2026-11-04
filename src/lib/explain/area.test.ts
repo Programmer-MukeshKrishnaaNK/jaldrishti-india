@@ -145,6 +145,12 @@ describe('explainArea', () => {
     expect(t).toContain('100 mm of rain')
   })
 
+  it('says the Google imagery is only a backdrop for PaaniPulse results', () => {
+    const t = text(explainArea(input({ view: 'google' })), 'looking')
+    expect(t).toContain('imagery is only a backdrop')
+    expect(t).not.toContain('colours show the height')
+  })
+
   it('asks for a scenario before describing water', () => {
     const e = explainArea(input({ scenario: null }))
     expect(e.summary).toContain('Run a rainfall scenario')

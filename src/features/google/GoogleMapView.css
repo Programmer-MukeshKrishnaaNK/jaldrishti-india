@@ -1,0 +1,129 @@
+.gmv {
+  position: absolute;
+  inset: 0;
+  /* Same layer as the 3D terrain view: above MapLibre, below the view switch. */
+  z-index: 4;
+  background: var(--bg);
+}
+
+.gmv-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.gmv-map3d {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.gmv-rain-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.gmv-loading {
+  z-index: 1;
+}
+
+/* Key, bottom-left above Google's logo: clear of the view switch and Google's own controls. */
+.gmv-panel {
+  position: absolute;
+  bottom: 40px;
+  left: var(--s3);
+  width: min(320px, calc(100% - 2 * var(--s3) - 56px));
+  max-height: calc(100% - 120px);
+  overflow-y: auto;
+  padding: var(--s2) var(--s3) var(--s3);
+  font-size: var(--text-xs);
+  background: rgb(247 244 238 / 0.95);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+.gmv-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin: 0 0 var(--s1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.gmv-figures {
+  margin: var(--s1) 0 var(--s2);
+  color: var(--ink);
+}
+
+.gmv-legend {
+  display: grid;
+  gap: var(--s1);
+  margin: 0 0 var(--s2);
+  padding: 0;
+  list-style: none;
+}
+
+.gmv-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.gmv-swatch {
+  flex: none;
+  width: 16px;
+  height: 12px;
+  border: 1px solid rgb(21 32 43 / 0.25);
+}
+
+.gmv-rain {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+
+.gmv-rain input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Hotspot pins on the Google 2D map, matching the PaaniPulse map and 3D view. */
+.gmv-pin {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  border: 2px solid var(--silt);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(21 32 43 / 0.45);
+  cursor: pointer;
+}
+
+.gmv-pin-selected {
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  border: 3px solid var(--ink);
+}
+
+@media (max-width: 767px) {
+  .gmv-panel {
+    left: var(--s2);
+    width: calc(100% - 2 * var(--s2) - 52px);
+    max-height: 42%;
+  }
+
+  /* Phones: heading, figures and rain only, so the map stays visible. */
+  .gmv-panel .gmv-legend,
+  .gmv-panel .panel-note {
+    display: none;
+  }
+}
