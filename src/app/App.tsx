@@ -11,6 +11,7 @@ import { ScenarioSection, type CoefficientMode } from '../features/scenario/Scen
 import { SearchBox } from '../features/search/SearchBox'
 import { TerrainSection } from '../features/terrain/TerrainSection'
 import { webglAvailable, WEBGL_UNAVAILABLE } from '../features/terrain3d/support'
+import { UnderstandSection } from '../features/understand/UnderstandSection'
 import { useAnalysisImage } from '../hooks/useAnalysisImage'
 import { useHydrology } from '../hooks/useHydrology'
 import { useLandCover } from '../hooks/useLandCover'
@@ -18,6 +19,7 @@ import { useTerrain } from '../hooks/useTerrain'
 import { elevationAt } from '../lib/dem/grid'
 import { INCIDENT_POINTS } from '../lib/evidence/incidents'
 import { squareAround, validateSelection, type Bbox } from '../lib/geo/bbox'
+import type { AreaInput } from '../lib/explain/area'
 import { isRegion, type Place } from '../lib/geocode/types'
 import type { Hotspot } from '../lib/hydrology/hotspots'
 import { analysisLayer, SCENARIO_LAYERS, type AnalysisLayerId } from '../lib/hydrology/layers'
@@ -63,6 +65,7 @@ export function App() {
   // Why the 3D view could not be shown, once it has failed; the 2D map is shown instead.
   const [threeDProblem, setThreeDProblem] = useState<string | null>(null)
   const [hasWebgl] = useState(webglAvailable)
+  const [areaLabel, setAreaLabel] = useState('that you drew')
   const terrain = useTerrain()
 
   const terrainState = terrain.state
@@ -112,7 +115,8 @@ export function App() {
 
   // Terrain always belongs to the current selection; a new selection discards it,
   // which also cancels any analysis or scenario running on it.
-  const select = (bbox: Bbox | null) => {
+  const select = (bbox: Bbox | null, label = 'that you drew') => {
+    setAreaLabel(label)
     terrain.clear()
     setSelectedHotspot(null)
     setSelection(bbox)
@@ -121,7 +125,7 @@ export function App() {
   const onPlace = (place: Place) => {
     setFlyRequest((previous) => ({ key: (previous?.key ?? 0) + 1, place }))
     setDrawing(false)
-    select(isRegion(place) ? null : squareAround(place.lng, place.lat))
+    select(isRegion(place) ? null : squareAround(place.lng, place.lat), `around ${place.name}`)
   }
 
   const runScenario = () => {
@@ -157,6 +161,34 @@ export function App() {
     if (mode === '3d') setDrawing(false)
   }
 
+  const scenarioResult = scenario.status === 'ready' ? scenario.result : null
+  const scenarioOutdated = scenario.status === 'ready' && (scenario.stale || coefficientsChanged)
+  const landCoverReady = landCover.state.status === 'ready' ? landCover.state : null
+  const areaInput = useMemo<AreaInput | null>(() => {
+    if (!demGrid) return null
+    return {
+      areaLabel,
+      grid: demGrid,
+      landCover: landCoverReady
+        ? { grid: landCoverReady.landCover, classShare: landCoverReady.classShare, missingShare: landCoverReady.missingShare }
+        : null,
+      uniformCoefficient: coefficientMode.kind === 'uniform' ? coefficientMode.value : null,
+      scenario: scenarioResult
+        ? {
+            rainfallMm: scenarioResult.rainfallMm,
+            summary: scenarioResult.summary,
+            comparison: scenarioResult.comparison,
+            hotspots: scenarioResult.hotspots,
+            fills: scenarioResult.fills,
+            outdated: scenarioOutdated,
+          }
+        : null,
+      chosenRainfallMm: rainfallMm,
+      selected: scenarioResult?.hotspots.find((h) => h.rank === selectedHotspot) ?? null,
+      view,
+    }
+  }, [demGrid, areaLabel, landCoverReady, coefficientMode, scenarioResult, scenarioOutdated, rainfallMm, selectedHotspot, view])
+
   const pointerElevation =
     terrainState.status === 'ready' && pointer ? elevationAt(terrainState.grid, pointer.lng, pointer.lat) : null
 
@@ -186,10 +218,11 @@ export function App() {
           drawing={drawing}
           busy={terrainState.status === 'loading'}
           onToggleDraw={() => setDrawing((d) => !d)}
-          onPlaceAtCentre={() => centre && select(squareAround(centre.lng, centre.lat))}
+          onPlaceAtCentre={() => centre && select(squareAround(centre.lng, centre.lat), 'around the map centre')}
           onClear={() => select(null)}
           onLoadTerrain={() => selection && !problem && terrain.load('copernicus-glo30', selection)}
         />
+        <UnderstandSection input={areaInput} />
         <TerrainSection terrain={terrainState} onRetry={(source) => selection && terrain.load(source, selection)} />
         <ScenarioSection
           analysisReady={hydro.status === 'ready'}
