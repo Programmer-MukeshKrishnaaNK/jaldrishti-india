@@ -5,7 +5,7 @@
 import { writeFile } from 'node:fs/promises'
 
 const ENDPOINT = 'https://overpass-api.de/api/interpreter'
-const USER_AGENT = 'PaaniPulse gazetteer build (https://github.com/Programmer-MukeshKrishnaaNK/jaldrishti-india)'
+const USER_AGENT = 'PaaniPulse gazetteer build (https://github.com/Programmer-MukeshKrishnaaNK/pannipulse)'
 
 // States and union territories (admin level 4), districts (level 5), and cities and
 // larger towns. Towns are limited to those with a recorded population of 50,000+.

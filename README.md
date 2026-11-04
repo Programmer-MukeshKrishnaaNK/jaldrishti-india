@@ -109,7 +109,7 @@ Requires Node.js 20.19+ or 22.12+ (developed on Node 24).
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173/jaldrishti-india/
+npm run dev        # http://localhost:5173/pannipulse/
 npm run typecheck
 npm run lint
 npm test
@@ -125,7 +125,7 @@ node scripts/build-gazetteer.mjs
 ## Deployment
 
 Pushes to `main` run `.github/workflows/deploy.yml`, which lints, tests, builds and publishes `dist/` to GitHub Pages at
-`https://programmer-mukeshkrishnaank.github.io/jaldrishti-india/`. The repository's Pages source must be set to **GitHub Actions**.
+`https://programmer-mukeshkrishnaank.github.io/pannipulse/`. The repository's Pages source must be set to **GitHub Actions**.
 
 See [docs/architecture.md](docs/architecture.md) for the code layout.
 

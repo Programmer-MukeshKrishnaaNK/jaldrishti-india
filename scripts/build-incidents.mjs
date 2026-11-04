@@ -9,7 +9,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 
 const ENDPOINT = 'https://nominatim.openstreetmap.org/search'
-const USER_AGENT = 'PaaniPulse incident build (https://github.com/Programmer-MukeshKrishnaaNK/jaldrishti-india)'
+const USER_AGENT = 'PaaniPulse incident build (https://github.com/Programmer-MukeshKrishnaaNK/pannipulse)'
 // West, north, east, south around Madurai city.
 const VIEWBOX = '77.98,10.02,78.22,9.84'
 
