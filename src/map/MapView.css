@@ -101,11 +101,17 @@
 }
 
 /* 2D / 3D switch, above both views, beside the zoom buttons. */
-.view-switch {
+/* View switch plus the Google Maps link, top-right beside MapLibre's zoom buttons. */
+.view-controls {
   position: absolute;
   z-index: 5;
   top: 10px;
   right: 52px;
+  display: flex;
+  gap: 6px;
+}
+
+.view-switch {
   display: flex;
   background: var(--surface);
   border: 1px solid var(--ink);
@@ -134,6 +140,39 @@
 .view-switch button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -4px;
+}
+
+/* Opens the official Google Maps website; quieter than the switch it sits beside. */
+.view-external {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 var(--s3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--surface);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+.view-external span[aria-hidden] {
+  margin-left: 2px;
+  color: var(--ink-2);
+}
+
+.view-external:hover {
+  background: var(--bg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.view-external:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 /* Shown on the 2D map after the 3D view could not start. */

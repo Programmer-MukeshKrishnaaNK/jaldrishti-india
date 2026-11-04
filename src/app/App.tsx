@@ -19,6 +19,7 @@ import { useTerrain } from '../hooks/useTerrain'
 import { elevationAt } from '../lib/dem/grid'
 import { INCIDENT_POINTS } from '../lib/evidence/incidents'
 import { squareAround, validateSelection, type Bbox } from '../lib/geo/bbox'
+import { bboxCentre, googleMapsUrl } from '../lib/geo/googleMaps'
 import type { AreaInput } from '../lib/explain/area'
 import { isRegion, type Place } from '../lib/geocode/types'
 import type { Hotspot } from '../lib/hydrology/hotspots'
@@ -66,6 +67,8 @@ export function App() {
   const [threeDProblem, setThreeDProblem] = useState<string | null>(null)
   const [hasWebgl] = useState(webglAvailable)
   const [areaLabel, setAreaLabel] = useState('that you drew')
+  // The searched place's name, for Google Maps when there is no selected area (e.g. a state).
+  const [placeName, setPlaceName] = useState<string | null>(null)
   const terrain = useTerrain()
 
   const terrainState = terrain.state
@@ -115,8 +118,9 @@ export function App() {
 
   // Terrain always belongs to the current selection; a new selection discards it,
   // which also cancels any analysis or scenario running on it.
-  const select = (bbox: Bbox | null, label = 'that you drew') => {
+  const select = (bbox: Bbox | null, label = 'that you drew', name: string | null = null) => {
     setAreaLabel(label)
+    setPlaceName(name)
     terrain.clear()
     setSelectedHotspot(null)
     setSelection(bbox)
@@ -125,7 +129,12 @@ export function App() {
   const onPlace = (place: Place) => {
     setFlyRequest((previous) => ({ key: (previous?.key ?? 0) + 1, place }))
     setDrawing(false)
-    select(isRegion(place) ? null : squareAround(place.lng, place.lat), `around ${place.name}`)
+    select(
+      isRegion(place) ? null : squareAround(place.lng, place.lat),
+      `around ${place.name}`,
+      // Context can be a kind ("State or union territory") rather than a place, so it is left out.
+      `${place.name}, India`,
+    )
   }
 
   const runScenario = () => {
@@ -188,6 +197,15 @@ export function App() {
       view,
     }
   }, [demGrid, areaLabel, landCoverReady, coefficientMode, scenarioResult, scenarioOutdated, rainfallMm, selectedHotspot, view])
+
+  // The selected area's centre, else the searched place's name, else the map centre.
+  const googleMapsHref = selection
+    ? googleMapsUrl(bboxCentre(selection))
+    : placeName
+      ? googleMapsUrl({ name: placeName })
+      : centre
+        ? googleMapsUrl(centre)
+        : null
 
   const pointerElevation =
     terrainState.status === 'ready' && pointer ? elevationAt(terrainState.grid, pointer.lng, pointer.lat) : null
@@ -254,19 +272,33 @@ export function App() {
       </ExplorePanel>
 
       <main className="app-map" aria-label="Map of India">
-        <div className="view-switch" role="radiogroup" aria-label="Map view">
-          {(['2d', '3d'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              role="radio"
-              aria-checked={view === mode}
-              title={mode === '3d' && !hasWebgl ? WEBGL_UNAVAILABLE : undefined}
-              onClick={() => showView(mode)}
+        <div className="view-controls">
+          <div className="view-switch" role="radiogroup" aria-label="Map view">
+            {(['2d', '3d'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={view === mode}
+                title={mode === '3d' && !hasWebgl ? WEBGL_UNAVAILABLE : undefined}
+                onClick={() => showView(mode)}
+              >
+                {VIEW_LABEL[mode]}
+              </button>
+            ))}
+          </div>
+          {googleMapsHref && (
+            <a
+              className="view-external"
+              href={googleMapsHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open this location on the Google Maps website, in a new tab"
             >
-              {VIEW_LABEL[mode]}
-            </button>
-          ))}
+              Google Maps<span aria-hidden="true"> ↗</span>
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          )}
         </div>
         {threeDProblem && view === '2d' && (
           <div className="view-notice" role="status">

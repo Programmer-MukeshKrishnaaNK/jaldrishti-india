@@ -24,6 +24,7 @@ Working now:
 - Hotspot screening with relative categories, ranked hotspots and a "Why here?" explanation generated from each hotspot's values.
 - Documented waterlogging reports for Madurai from dated news articles, shown as context.
 - A 3D view of the loaded terrain (Three.js): real Copernicus elevations with a stated vertical exaggeration, the scenario's modelled ponding drawn cell by cell at its modelled water level, numbered pins for the ranked hotspots, and an illustrative rain animation. The 2D map stays available as a fallback.
+- A **Google Maps ↗** link beside the view switch that opens the selected area's centre (or the searched place's name) on the official Google Maps website in a new tab. It is a plain link in the documented Maps URLs format: no API key, no embedded Google map, and only the coordinates or place name are sent.
 - "Understand this area": a plain-language explanation of the selected area and scenario, written from the model's own results for people without a hydrology background.
 - A method and limitations dialog in the app; the full write-up is in [docs/methodology.md](docs/methodology.md).
 

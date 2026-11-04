@@ -49,7 +49,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s2) var(--s3);
-  max-width: calc(100% - 2 * var(--s3) - 210px);
+  max-width: calc(100% - 2 * var(--s3) - 340px);
 }
 
 .view3d-title {
