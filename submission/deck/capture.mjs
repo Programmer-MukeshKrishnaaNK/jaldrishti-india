@@ -127,6 +127,19 @@ await click(button('Reset view'))
 await sleep(2500)
 await shot('10-3d-home')
 
+// Google Photorealistic 3D of the same area and scenario, with the illustrative rain running.
+await click(`[...document.querySelectorAll('.view-switch button')].find((b) => b.textContent === 'Google 3D')`)
+await waitFor(`document.querySelector('gmp-map-3d')`)
+await sleep(20000)
+await run(`(() => {
+  const slider = document.querySelector('.gmv-rain input[type=range]')
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(slider, '0.85')
+  slider.dispatchEvent(new Event('input', { bubbles: true }))
+})()`)
+await click(`[...document.querySelectorAll('.gmv-panel button')].find((b) => b.textContent === 'Show rain')`)
+await sleep(2500)
+await shot('11-google-3d-rain')
+
 console.log(JSON.stringify(await run(`({
   held: document.body.innerText.match(/Held in terrain hollows\\s+([\\d,]+ m³)/)?.[1],
   generated: document.body.innerText.match(/Runoff generated\\s+([\\d,]+ m³)/)?.[1],

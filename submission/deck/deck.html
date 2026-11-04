@@ -143,6 +143,7 @@ p { margin: 0; }
 
 /* 10 closing */
 .close-img { position: absolute; top: 0; right: 0; width: 640px; height: 720px; object-fit: cover; }
+.img-tag { position: absolute; right: 10px; bottom: 10px; font-family: 'Plex Mono', monospace; font-size: 11.5px; color: var(--ink); background: rgb(241 237 228 / 0.92); border: 1px solid var(--ink); padding: 2px 7px; }
 .close-panel { position: absolute; left: 0; top: 0; bottom: 0; width: 640px; background: var(--silt); border-right: 1px solid var(--ink); padding: 72px 64px; display: flex; flex-direction: column; }
 .close-line { font-size: 40px; line-height: 1.12; font-weight: 600; letter-spacing: -0.015em; }
 .close-line span { color: var(--paani); }
@@ -329,28 +330,29 @@ p { margin: 0; }
 <section class="slide">
   <div class="pad">
     <p class="kicker">Product experience</p>
-    <h1>One area, three views, plain words.</h1>
+    <h1>One area, every view, plain words.</h1>
   </div>
   <div class="product">
     <div>
-      <img class="shot" src="shots/10-3d-home.jpg" width="586" height="330" alt="Three.js 3D terrain view">
+      <img class="shot" src="shots/threejs-wide.jpg" width="586" height="226" alt="Three.js 3D terrain view">
       <p class="cap">3D View (Three.js): real GLO-30 heights ×3, modelled ponding, hotspot pins</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px">
-        <div><img class="shot" src="shots/01-india.jpg" width="287" height="96" style="object-position:50% 30%" alt="India-wide map"><p class="cap">India-wide search and map</p></div>
-        <div><img class="shot" src="shots/04-ponding.jpg" width="287" height="96" style="object-position:66% 52%" alt="2D modelled ponding"><p class="cap">2D MapLibre: modelled ponding</p></div>
+      <div style="position:relative; margin-top:10px">
+        <img class="shot" src="shots/google-rain-wide.jpg" width="586" height="226" alt="Google Photorealistic 3D of Madurai with PaaniPulse ponding, hotspots and illustrative rain">
+        <span class="img-tag">Simulated · rain illustrative</span>
       </div>
+      <p class="cap">Google 3D: PaaniPulse ponding and hotspots, with rain · imagery © Google</p>
     </div>
     <div>
-      <img class="shot" src="shots/08-understand-panel.jpg" width="200" height="424" style="object-position:50% 0" alt="Understand this area panel">
+      <img class="shot" src="shots/08-understand-panel.jpg" width="200" height="450" style="object-position:50% 0" alt="Understand this area panel">
       <p class="cap">Understand this area</p>
     </div>
     <ul class="hl">
       <li><b>India-wide exploration</b><span>Any place, any area up to 25 km².</span></li>
-      <li><b>2D map and 3D terrain</b><span>Switch views without losing the area or scenario.</span></li>
+      <li><b>2D, 3D and Google 3D</b><span>Switch views without losing the area or scenario.</span></li>
       <li><b>Rainfall controls</b><span>50, 100, 150 mm or custom, with a full volume balance.</span></li>
       <li><b>Hotspots</b><span>Top 10 numbered on the map, each with a "Why here?" breakdown.</span></li>
       <li><b>Understand this area</b><span>Five everyday questions answered from the model's own numbers.</span></li>
-      <li><b>Optional Google views</b><span>Google 2D and Photorealistic 3D of the same area, on a Maps Demo Key.</span></li>
+      <li><b>Rain on real cities</b><span>Google Photorealistic 3D with PaaniPulse overlays and rain, on a Maps Demo Key.</span></li>
     </ul>
   </div>
   <div class="footer"><span><b>PaaniPulse</b> · HackCult '26 · all screenshots from the live app</span><span>06 / 10</span></div>
@@ -468,7 +470,8 @@ p { margin: 0; }
 
 <!-- 10 CLOSING -->
 <section class="slide">
-  <img class="close-img" src="shots/close-terrain.jpg" alt="3D terrain of Madurai with hotspots 8 and 1">
+  <img class="close-img" src="shots/google-rain-tall.jpg" alt="Google Photorealistic 3D of Madurai with PaaniPulse ponding, hotspot 1 and illustrative rain">
+  <span class="img-tag" style="right:16px; bottom:16px">Google Photorealistic 3D · imagery © Google · PaaniPulse overlay, simulated</span>
   <div class="close-panel">
     <div class="wordmark">
       <svg class="mark" width="56" height="56" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="#15202B" stroke-width="2.2" stroke-linecap="round"><path d="M4 6 Q16 34 28 6"/><path d="M9 6 Q16 26 23 6"/><path d="M13.5 6 Q16 17 18.5 6"/></g><circle cx="16" cy="25" r="2.6" fill="#1F6FB5"/></svg>
